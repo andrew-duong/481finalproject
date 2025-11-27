@@ -1,0 +1,2963 @@
+import React, { useState } from 'react';
+import { Home, CheckSquare, User, Calendar, Menu, X, ChevronDown, ChevronRight, DollarSign, FileText } from 'lucide-react';
+import { Logo } from './components/Logo';
+
+type StaffScreen = 'staff-home' | 'staff-log' | 'staff-class-list' | 'staff-events' | 'staff-event-details' | 'staff-attendance' | 'staff-add-event' | 'staff-edit-event' | 'staff-view-logs' | 'staff-edit-log' | 'staff-forms' | 'staff-form-detail' | 'staff-fees' | 'staff-add-fee';
+
+// Staff Bottom Navigation Component
+function StaffBottomNav({ current, onNavigate }: { current: string; onNavigate: (screen: StaffScreen) => void }) {
+  const navItems = [
+    { id: 'staff-home', label: 'Home', icon: Home, screen: 'staff-home' as StaffScreen },
+    { id: 'staff-log', label: 'Log', icon: CheckSquare, screen: 'staff-log' as StaffScreen },
+    { id: 'staff-class-list', label: 'Class List', icon: User, screen: 'staff-class-list' as StaffScreen },
+    { id: 'staff-events', label: 'Events', icon: Calendar, screen: 'staff-events' as StaffScreen },
+    { id: 'staff-forms', label: 'Forms', icon: FileText, screen: 'staff-forms' as StaffScreen },
+    { id: 'staff-fees', label: 'Fees', icon: DollarSign, screen: 'staff-fees' as StaffScreen },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-[#8AA991]">
+      <div className="flex justify-around items-center py-2 max-w-6xl mx-auto">
+        {navItems.map(item => {
+          const Icon = item.icon;
+          const isActive = current === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.screen)}
+              className={`flex flex-col items-center p-2 ${
+                isActive ? 'text-white' : 'text-black'
+              }`}
+            >
+              <Icon className="w-6 h-6 mb-1" />
+              <span className="text-xs">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Staff Home Screen - Shows all events
+function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; events: any[]; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 11)); // November 11, 2025
+
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    return { daysInMonth, startingDayOfWeek, year, month };
+  };
+
+  const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentDate);
+
+  const previousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const getEventsForMonth = () => {
+    return events.filter(event => {
+      const eventMonth = event.date.getMonth();
+      const eventYear = event.date.getFullYear();
+      return eventMonth === month && eventYear === year;
+    });
+  };
+
+  const hasEventOnDate = (day: number) => {
+    return events.some(event => 
+      event.date.getDate() === day && 
+      event.date.getMonth() === month && 
+      event.date.getFullYear() === year
+    );
+  };
+
+  const eventsThisMonth = getEventsForMonth();
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        {/* Calendar */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+              {monthNames[month]}
+            </h2>
+            <div className="flex gap-2">
+              <button 
+                onClick={previousMonth}
+                className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                &lt;
+              </button>
+              <button 
+                onClick={nextMonth}
+                className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                &gt;
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-7 gap-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+                {day}
+              </div>
+            ))}
+            
+            {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+              <div key={`empty-${index}`} />
+            ))}
+            
+            {Array.from({ length: daysInMonth }).map((_, index) => {
+              const day = index + 1;
+              const isToday = day === 11 && month === 10 && year === 2025;
+              const hasEvent = hasEventOnDate(day);
+              
+              return (
+                <div
+                  key={day}
+                  className={`text-center py-3 rounded-lg cursor-pointer relative ${
+                    isToday ? 'bg-[#155323] text-white font-bold' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  {day}
+                  {hasEvent && (
+                    <div className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
+                      isToday ? 'bg-white' : 'bg-[#BF6A02]'
+                    }`}></div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Events for this month */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl mb-6" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+            Events This Month
+          </h2>
+          
+          {eventsThisMonth.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No events scheduled for this month</p>
+          ) : (
+            <div className="space-y-2">
+              {eventsThisMonth.map(event => (
+                <div 
+                  key={event.id} 
+                  className="flex items-center justify-between bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-[#BF6A02] text-white rounded-lg px-3 py-2 text-center min-w-[60px]">
+                      <div className="text-xs">
+                        {event.date.toLocaleDateString('en-US', { month: 'short' })}
+                      </div>
+                      <div className="text-xl font-bold">
+                        {event.date.getDate()}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{event.title}</h4>
+                      <p className="text-sm text-gray-600">{event.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onNavigate('staff-event-details', event)}
+                    className="text-[#155323] hover:text-[#0d3a18] transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-home" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Log Activity Screen
+function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (screen: StaffScreen) => void; onAddLog: (logData: any) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+  const [activityType, setActivityType] = useState('');
+  const [startHour, setStartHour] = useState('00');
+  const [startMinute, setStartMinute] = useState('00');
+  const [startPeriod, setStartPeriod] = useState('AM');
+  const [endHour, setEndHour] = useState('00');
+  const [endMinute, setEndMinute] = useState('00');
+  const [endPeriod, setEndPeriod] = useState('PM');
+  const [notes, setNotes] = useState('');
+  const [behavioralNotes, setBehavioralNotes] = useState<{ child: string; note: string }[]>([]);
+  const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
+  const [showBehavioralChildDropdown, setShowBehavioralChildDropdown] = useState(false);
+
+  const children = ['Noah Bennett', 'Lucas Carter', 'Ava Martinez', 'Alex James', 'Amy James', 'Rob James', 'Sofia Patel', 'Emma Parker', 'Liam Thompson'];
+
+  const handleChildSelection = (child: string, checked: boolean) => {
+    if (checked) {
+      setSelectedChildren([...selectedChildren, child]);
+    } else {
+      setSelectedChildren(selectedChildren.filter(c => c !== child));
+      // Remove behavioral notes for this child if they exist
+      setBehavioralNotes(behavioralNotes.filter(note => note.child !== child));
+    }
+  };
+
+  const allChildrenSelected = selectedChildren.length === children.length;
+  const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
+
+  const toggleSelectAllChildren = () => {
+    if (allChildrenSelected) {
+      setSelectedChildren([]);
+      setBehavioralNotes([]);
+    } else {
+      setSelectedChildren([...children]);
+    }
+  };
+
+  const addBehavioralNote = (child: string) => {
+    setBehavioralNotes([...behavioralNotes, { child, note: '' }]);
+    setShowBehavioralChildDropdown(false);
+  };
+
+  const updateBehavioralNote = (index: number, note: string) => {
+    const newNotes = [...behavioralNotes];
+    newNotes[index].note = note;
+    setBehavioralNotes(newNotes);
+  };
+
+  const removeBehavioralNote = (index: number) => {
+    setBehavioralNotes(behavioralNotes.filter((_, i) => i !== index));
+  };
+
+  const availableChildrenForNotes = selectedChildren.filter(
+    child => !behavioralNotes.some(note => note.child === child)
+  );
+
+  const handleSubmit = () => {
+    // Validation
+    if (selectedChildren.length === 0) {
+      alert('Please select at least one child');
+      return;
+    }
+    if (!activityType.trim()) {
+      alert('Please enter an activity name');
+      return;
+    }
+
+    // Format time strings
+    const startTime = `${startHour}:${startMinute}${startPeriod.toLowerCase()}`;
+    const endTime = `${endHour}:${endMinute}${endPeriod.toLowerCase()}`;
+
+    // Create children array with all children and their behavioral notes
+    const allChildren = ['Noah Bennett', 'Lucas Carter', 'Ava Martinez', 'Alex James', 'Amy James', 'Rob James', 'Sofia Patel', 'Emma Parker', 'Liam Thompson'];
+    const childrenData = allChildren.map(childName => {
+      const isSelected = selectedChildren.includes(childName);
+      const behavioralNote = behavioralNotes.find(note => note.child === childName);
+      return {
+        name: childName,
+        selected: isSelected,
+        behavioralNote: behavioralNote ? behavioralNote.note : ''
+      };
+    });
+
+    // Create log object
+    const newLog = {
+      activityName: activityType,
+      startTime,
+      endTime,
+      startHour,
+      startMinute,
+      startPeriod,
+      endHour,
+      endMinute,
+      endPeriod,
+      notes,
+      children: childrenData
+    };
+
+    // Add the log and navigate to view logs
+    onAddLog(newLog);
+    onNavigate('staff-view-logs');
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-center">
+            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Log Activity
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 md:p-8">
+        <div className="space-y-6">
+          {/* Select Children */}
+          <div className="relative">
+            <button
+              onClick={() => setShowChildrenDropdown(!showChildrenDropdown)}
+              className="w-full bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              <span>Select Children</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {showChildrenDropdown && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
+                {/* Select All / Deselect All */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer">
+                  <button
+                    onClick={toggleSelectAllChildren}
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
+                      allChildrenSelected ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                    }`}
+                  >
+                    {allChildrenSelected && (
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                      </svg>
+                    )}
+                    {someChildrenSelected && (
+                      <div className="w-3 h-0.5 bg-[#2c2c2c]" />
+                    )}
+                  </button>
+                  <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    {allChildrenSelected ? 'Deselect All' : 'Select All'}
+                  </span>
+                </div>
+                
+                {children.map(child => (
+                  <div key={child} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child, !selectedChildren.includes(child))}>
+                    <button
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
+                        selectedChildren.includes(child) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                      }`}
+                    >
+                      {selectedChildren.includes(child) && (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                        </svg>
+                      )}
+                    </button>
+                    <span className="text-sm">{child}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedChildren.length > 0 && (
+              <div className="mt-2 text-sm text-gray-600">
+                Selected: {selectedChildren.join(', ')}
+              </div>
+            )}
+          </div>
+
+          {/* Activity Type */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Activity Name</label>
+            <input
+              type="text"
+              value={activityType}
+              onChange={(e) => setActivityType(e.target.value)}
+              placeholder="Enter activity name"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+            />
+          </div>
+
+          {/* Start Time */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Start Time</label>
+            <div className="flex items-center gap-2">
+              <select
+                value={startHour}
+                onChange={(e) => setStartHour(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = String(i + 1).padStart(2, '0');
+                  return <option key={hour} value={hour}>{hour}</option>;
+                })}
+              </select>
+              <span className="text-lg">:</span>
+              <select
+                value={startMinute}
+                onChange={(e) => setStartMinute(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const minute = String(i).padStart(2, '0');
+                  return <option key={minute} value={minute}>{minute}</option>;
+                })}
+              </select>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setStartPeriod('AM')}
+                  className={`px-3 py-2 rounded text-xs ${startPeriod === 'AM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  AM
+                </button>
+                <button
+                  onClick={() => setStartPeriod('PM')}
+                  className={`px-3 py-2 rounded text-xs ${startPeriod === 'PM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* End Time */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>End Time</label>
+            <div className="flex items-center gap-2">
+              <select
+                value={endHour}
+                onChange={(e) => setEndHour(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = String(i + 1).padStart(2, '0');
+                  return <option key={hour} value={hour}>{hour}</option>;
+                })}
+              </select>
+              <span className="text-lg">:</span>
+              <select
+                value={endMinute}
+                onChange={(e) => setEndMinute(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const minute = String(i).padStart(2, '0');
+                  return <option key={minute} value={minute}>{minute}</option>;
+                })}
+              </select>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setEndPeriod('AM')}
+                  className={`px-3 py-2 rounded text-xs ${endPeriod === 'AM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  AM
+                </button>
+                <button
+                  onClick={() => setEndPeriod('PM')}
+                  className={`px-3 py-2 rounded text-xs ${endPeriod === 'PM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* General Notes */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>General Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notes for this activity..."
+              className="w-full h-32 px-4 py-3 border border-gray-300 rounded-xl resize-none"
+            />
+          </div>
+
+          {/* Behavioral Notes Section */}
+          {selectedChildren.length > 0 && (
+            <div className="space-y-4 border-t border-gray-200 pt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                  Behavioral Notes
+                </h3>
+                {availableChildrenForNotes.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowBehavioralChildDropdown(!showBehavioralChildDropdown)}
+                      className="w-8 h-8 flex items-center justify-center bg-[#155323] hover:bg-[#0f3d1a] text-white rounded-full transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                    {showBehavioralChildDropdown && (
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
+                        {availableChildrenForNotes.map(child => (
+                          <button
+                            key={child}
+                            onClick={() => addBehavioralNote(child)}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                          >
+                            {child}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {behavioralNotes.length > 0 ? (
+                <div className="space-y-4">
+                  {behavioralNotes.map((note, index) => (
+                    <div key={index} className="space-y-2 p-4 bg-gray-50 rounded-xl relative">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                          {note.child}
+                        </label>
+                        <button
+                          onClick={() => removeBehavioralNote(index)}
+                          className="text-red-600 hover:text-red-700 p-1"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <textarea
+                        value={note.note}
+                        onChange={(e) => updateBehavioralNote(index, e.target.value)}
+                        placeholder={`Add behavioral notes for ${note.child}...`}
+                        className="w-full h-24 px-4 py-3 border border-gray-300 rounded-xl resize-none text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  Click the + button to add behavioral notes for specific children
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="flex justify-center">
+            <button 
+              onClick={handleSubmit}
+              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Submit
+            </button>
+          </div>
+
+          {/* View Logs Button */}
+          <div className="flex justify-center">
+            <button 
+              onClick={() => onNavigate('staff-view-logs')}
+              className="bg-[#BF6A02] hover:bg-[#A55A02] text-white px-12 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              View Logs
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-log" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Attendance Screen (accessed from Class List)
+function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout }: { 
+  onNavigate: (screen: StaffScreen) => void;
+  attendance: { [key: string]: boolean };
+  setAttendance: (attendance: { [key: string]: boolean }) => void;
+  onLogout?: () => void;
+}) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const toggleAttendance = (name: string) => {
+    setAttendance({ ...attendance, [name]: !attendance[name] });
+  };
+
+  const students = Object.keys(attendance);
+
+  const allChecked = students.every(student => attendance[student]);
+  const someChecked = students.some(student => attendance[student]) && !allChecked;
+
+  const toggleSelectAll = () => {
+    const newAttendance: { [key: string]: boolean } = {};
+    const newValue = !allChecked;
+    students.forEach(student => {
+      newAttendance[student] = newValue;
+    });
+    setAttendance(newAttendance);
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <div className="col-span-2 flex justify-start">
+              <button 
+                onClick={() => onNavigate('staff-class-list')}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Attendance
+              </h1>
+            </div>
+            <div className="col-span-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="bg-white rounded-2xl p-6 space-y-4">
+          {/* Select All / Deselect All */}
+          <div className="flex items-center gap-3 p-2 border-b-2 border-gray-200 pb-4">
+            <button
+              onClick={toggleSelectAll}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                allChecked ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+              }`}
+            >
+              {allChecked && (
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                </svg>
+              )}
+              {someChecked && (
+                <div className="w-3 h-0.5 bg-[#2c2c2c]" />
+              )}
+            </button>
+            <span className="text-[#1e1e1e]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+              {allChecked ? 'Deselect All' : 'Select All'}
+            </span>
+          </div>
+
+          {students.map(student => (
+            <div key={student} className="flex items-center gap-3 p-2">
+              <button
+                onClick={() => toggleAttendance(student)}
+                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                  attendance[student] ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                }`}
+              >
+                {attendance[student] && (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                  </svg>
+                )}
+              </button>
+              <span className="text-[#1e1e1e]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                {student}
+              </span>
+            </div>
+          ))}
+
+          <div className="flex justify-center pt-6">
+            <button 
+              onClick={() => onNavigate('staff-class-list')}
+              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-8 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-class-list" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Class List Screen
+function StaffClassListScreen({ onNavigate, attendance, onLogout }: { onNavigate: (screen: StaffScreen) => void; attendance: { [key: string]: boolean }; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const students = [
+    { name: 'Noah Bennett', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Lucas Carter', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Ava Martinez', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Alex James', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Amy James', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Rob James', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Sofia Patel', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Emma Parker', contact: '(888)-888-8888', medical: 'N/A' },
+    { name: 'Liam Thompson', contact: '(888)-888-8888', medical: 'Asthma' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-center gap-3">
+            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Class List
+              </h1>
+            </div>
+            <button
+              onClick={() => onNavigate('staff-attendance')}
+              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors text-sm"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Attendance
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="bg-white rounded-2xl overflow-hidden">
+          {/* Header Row */}
+          <div className="bg-[rgba(191,106,2,0.2)] px-4 py-3">
+            <div className="grid grid-cols-4 gap-4">
+              <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Name</span>
+              <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Parental Contact</span>
+              <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Medical Notes</span>
+              <span className="text-sm text-center" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Present Today</span>
+            </div>
+          </div>
+
+          {/* Student Rows */}
+          {students.map((student, index) => (
+            <div 
+              key={index} 
+              className={`px-4 py-4 border-b border-gray-100 ${index % 2 === 0 ? 'bg-[#fef7ff]' : 'bg-white'}`}
+            >
+              <div className="grid grid-cols-4 gap-4 items-center">
+                <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.name}</span>
+                <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.contact}</span>
+                <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.medical}</span>
+                <div className="flex justify-center">
+                  {attendance[student.name] ? (
+                    <span className="text-green-600 flex items-center gap-1">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-sm">Yes</span>
+                    </span>
+                  ) : (
+                    <span className="text-red-600 text-sm">No</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-class-list" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Events Screen
+function StaffEventsScreen({ events, onNavigate, onLogout }: { events: any[]; onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-center items-center mb-4">
+            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Upcoming Events
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button 
+              onClick={() => onNavigate('staff-add-event')}
+              className="bg-[#155323] text-white px-6 py-3 rounded-xl hover:bg-[#0d3a18] transition-all"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              + Add Event
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="space-y-4">
+          {events.map(event => (
+            <div
+              key={event.id}
+              className="bg-[#f2f3f7] rounded-xl p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex-1">
+                  <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    {event.title}
+                  </h3>
+                  <p className="text-gray-600">
+                    {event.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+                <button
+                  onClick={() => onNavigate('staff-event-details', event)}
+                  className="bg-[#155323] text-white px-6 py-3 rounded-xl hover:bg-[#0d3a18] transition-all ml-4"
+                  style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-events" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Event Details Screen
+function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-1 flex justify-start">
+              <button 
+                onClick={() => onNavigate('staff-events')}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-10 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                {event?.title}
+              </h1>
+            </div>
+            <div className="col-span-1"></div>
+          </div>
+
+          <div className="flex justify-end gap-3 mb-4">
+            <button 
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this event?')) {
+                  onNavigate('staff-events');
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl transition-colors text-sm"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Delete Event
+            </button>
+            <button 
+              onClick={() => onNavigate('staff-edit-event', event)}
+              className="bg-[#155323] text-white px-6 py-3 rounded-xl hover:bg-[#0d3a18] transition-all"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Edit Event
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="bg-[#f2f3f7] rounded-2xl p-6 md:p-8">
+          <div className="mb-6">
+            <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+              Location:
+            </h3>
+            <p className="text-[#0088ff] text-lg">
+              1500 N Dinosaur Trail, Drumheller, AB T0J 0Y0
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+              Date:
+            </h3>
+            <p className="text-gray-600 text-lg">
+              {event?.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+              Duration:
+            </h3>
+            <p className="text-gray-600 text-lg">
+              8:00am-3:30pm
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+              Description:
+            </h3>
+            <p className="text-gray-600">
+              Get ready for a roaring adventure! Sunnyview daycare will be visiting the Royal Tyrrell Museum in Drumheller to explore real dinosaur fossils, interactive exhibits, and hands-on discovery zones. Children will learn about prehistoric creatures and enjoy a fun-filled day of exploration and curiosity.
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+              Notes:
+            </h3>
+            <p className="text-gray-600">
+              Please pack a lunch, water bottle, and comfortable walking shoes!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-events" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Add/Edit Event Screen
+function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout }: { event?: any; onNavigate: (screen: StaffScreen, data?: any) => void; mode: 'add' | 'edit'; onAddEvent: (eventData: any) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [title, setTitle] = useState(event?.title || '');
+  const [location, setLocation] = useState(mode === 'edit' ? '1500 N Dinosaur Trail, Drumheller, AB T0J 0Y0' : '');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(mode === 'edit' && event?.date ? event.date : null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [startHour, setStartHour] = useState('08');
+  const [startMinute, setStartMinute] = useState('00');
+  const [startPeriod, setStartPeriod] = useState('AM');
+  const [endHour, setEndHour] = useState('03');
+  const [endMinute, setEndMinute] = useState('30');
+  const [endPeriod, setEndPeriod] = useState('PM');
+  const [description, setDescription] = useState(mode === 'edit' ? 'Get ready for a roaring adventure! Sunnyview daycare will be visiting the Royal Tyrrell Museum in Drumheller to explore real dinosaur fossils, interactive exhibits, and hands-on discovery zones. Children will learn about prehistoric creatures and enjoy a fun-filled day of exploration and curiosity.' : '');
+  const [notes, setNotes] = useState(mode === 'edit' ? 'Please pack a lunch, water bottle, and comfortable walking shoes!' : '');
+  const [formFile, setFormFile] = useState<File | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(mode === 'edit' && event?.date ? event.date : new Date());
+  const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
+
+  const allChildren = [
+    'Noah Bennett',
+    'Lucas Carter',
+    'Ava Martinez',
+    'Alex James',
+    'Amy James',
+    'Rob James',
+    'Sofia Patel',
+    'Emma Parker',
+    'Liam Thompson'
+  ];
+
+  const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+
+  const handleChildSelection = (child: string, checked: boolean) => {
+    if (checked) {
+      setSelectedChildren([...selectedChildren, child]);
+    } else {
+      setSelectedChildren(selectedChildren.filter(c => c !== child));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedChildren([...allChildren]);
+    } else {
+      setSelectedChildren([]);
+    }
+  };
+
+  const allChildrenSelected = selectedChildren.length === allChildren.length;
+  const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
+
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    return { daysInMonth, startingDayOfWeek, year, month };
+  };
+
+  const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentMonth);
+
+  const previousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const handleDateSelect = (day: number) => {
+    const selected = new Date(year, month, day);
+    setSelectedDate(selected);
+    setShowCalendar(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormFile(e.target.files[0]);
+    }
+  };
+
+  const handleCreateEvent = () => {
+    // Validation
+    if (!title.trim()) {
+      alert('Please enter an event title');
+      return;
+    }
+    if (!selectedDate) {
+      alert('Please select a date for the event');
+      return;
+    }
+    if (selectedChildren.length === 0) {
+      alert('Please select at least one child');
+      return;
+    }
+
+    // Create event object
+    const newEvent = {
+      title: title.trim(),
+      date: selectedDate,
+      location: location.trim(),
+      startTime: `${startHour}:${startMinute}${startPeriod.toLowerCase()}`,
+      endTime: `${endHour}:${endMinute}${endPeriod.toLowerCase()}`,
+      description: description.trim(),
+      notes: notes.trim(),
+      formFile: formFile?.name || null,
+      children: selectedChildren
+    };
+
+    // Add the event and navigate to events screen
+    onAddEvent(newEvent);
+    onNavigate('staff-events');
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <div className="col-span-2 flex justify-start">
+              <button 
+                onClick={() => mode === 'edit' ? onNavigate('staff-event-details', event) : onNavigate('staff-events')}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                {mode === 'add' ? 'Add Event' : 'Edit Event'}
+              </h1>
+            </div>
+            <div className="col-span-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 md:p-8">
+        <div className="space-y-6">
+          {/* Title */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Event Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title for Event"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+            />
+          </div>
+
+          {/* Location */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Location
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Event location"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+            />
+          </div>
+
+          {/* Date with Calendar Picker */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Date
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-left flex items-center justify-between"
+              >
+                <span className={selectedDate ? 'text-black' : 'text-gray-400'}>
+                  {selectedDate 
+                    ? selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    : 'Select date'}
+                </span>
+                <Calendar className="w-5 h-5 text-gray-400" />
+              </button>
+
+              {showCalendar && (
+                <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-10 p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <button onClick={previousMonth} className="p-2 hover:bg-gray-100 rounded">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <h3 className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      {monthNames[month]} {year}
+                    </h3>
+                    <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                      <div key={idx} className="text-center text-gray-600 text-xs py-1">
+                        {day}
+                      </div>
+                    ))}
+                    
+                    {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+                      <div key={`empty-${index}`} />
+                    ))}
+                    
+                    {Array.from({ length: daysInMonth }).map((_, index) => {
+                      const day = index + 1;
+                      const isSelected = selectedDate && 
+                        selectedDate.getDate() === day && 
+                        selectedDate.getMonth() === month && 
+                        selectedDate.getFullYear() === year;
+                      
+                      return (
+                        <button
+                          key={day}
+                          onClick={() => handleDateSelect(day)}
+                          className={`aspect-square flex items-center justify-center rounded-lg text-sm ${
+                            isSelected ? 'bg-[#155323] text-white' : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Duration - Start Time */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Start Time
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                value={startHour}
+                onChange={(e) => setStartHour(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = String(i + 1).padStart(2, '0');
+                  return <option key={hour} value={hour}>{hour}</option>;
+                })}
+              </select>
+              <span className="text-lg">:</span>
+              <select
+                value={startMinute}
+                onChange={(e) => setStartMinute(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const minute = String(i).padStart(2, '0');
+                  return <option key={minute} value={minute}>{minute}</option>;
+                })}
+              </select>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setStartPeriod('AM')}
+                  className={`px-3 py-2 rounded text-xs ${startPeriod === 'AM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  AM
+                </button>
+                <button
+                  onClick={() => setStartPeriod('PM')}
+                  className={`px-3 py-2 rounded text-xs ${startPeriod === 'PM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Duration - End Time */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              End Time
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                value={endHour}
+                onChange={(e) => setEndHour(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = String(i + 1).padStart(2, '0');
+                  return <option key={hour} value={hour}>{hour}</option>;
+                })}
+              </select>
+              <span className="text-lg">:</span>
+              <select
+                value={endMinute}
+                onChange={(e) => setEndMinute(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const minute = String(i).padStart(2, '0');
+                  return <option key={minute} value={minute}>{minute}</option>;
+                })}
+              </select>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setEndPeriod('AM')}
+                  className={`px-3 py-2 rounded text-xs ${endPeriod === 'AM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  AM
+                </button>
+                <button
+                  onClick={() => setEndPeriod('PM')}
+                  className={`px-3 py-2 rounded text-xs ${endPeriod === 'PM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Children Selection */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Select Children
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowChildrenDropdown(!showChildrenDropdown)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl flex justify-between items-center bg-white"
+              >
+                <span className="text-gray-600">
+                  {selectedChildren.length === 0
+                    ? 'Select children'
+                    : `${selectedChildren.length} child(ren) selected`}
+                </span>
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              </button>
+
+              {showChildrenDropdown && (
+                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-xl shadow-lg max-h-80 overflow-y-auto">
+                  <div className="p-3 border-b border-gray-200 bg-gray-50">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={allChildrenSelected}
+                        ref={(input) => {
+                          if (input) {
+                            input.indeterminate = someChildrenSelected;
+                          }
+                        }}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-300"
+                      />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        Select All
+                      </span>
+                    </label>
+                  </div>
+                  {allChildren.map((child) => (
+                    <div key={child} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedChildren.includes(child)}
+                          onChange={(e) => handleChildSelection(child, e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-300"
+                        />
+                        <span>{child}</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {selectedChildren.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedChildren.map((child) => (
+                  <div
+                    key={child}
+                    className="bg-[#155323] text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2"
+                  >
+                    <span>{child}</span>
+                    <button
+                      onClick={() => handleChildSelection(child, false)}
+                      className="hover:bg-white/20 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description for event"
+              className="w-full h-32 px-4 py-3 border border-gray-300 rounded-xl resize-none"
+            />
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Notes
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notes for Event"
+              className="w-full h-24 px-4 py-3 border border-gray-300 rounded-xl resize-none"
+            />
+          </div>
+
+          {/* Form Upload */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Form (if applicable)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
+              <input
+                type="file"
+                id="form-upload"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx"
+                className="hidden"
+              />
+              <label
+                htmlFor="form-upload"
+                className="flex flex-col items-center justify-center cursor-pointer"
+              >
+                {formFile ? (
+                  <div className="flex items-center gap-2">
+                    <svg className="w-8 h-8 text-[#155323]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                        {formFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Click to change file
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      PDF, DOC, or DOCX
+                    </p>
+                  </div>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-4">
+            <button
+              onClick={() => mode === 'edit' ? onNavigate('staff-event-details', event) : onNavigate('staff-events')}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-12 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={mode === 'add' ? handleCreateEvent : undefined}
+              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              {mode === 'add' ? 'Create Event' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-events" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff View Logs Screen
+function StaffViewLogsScreen({ onNavigate, logs, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; logs: any[]; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-2 flex justify-start">
+              <button 
+                onClick={() => onNavigate('staff-log')}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Activities
+              </h1>
+            </div>
+            <div className="col-span-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="space-y-4">
+          {logs.map(log => (
+            <div
+              key={log.id}
+              className="bg-[#f2f3f7] rounded-xl p-6"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex-1">
+                  <h3 className="text-lg mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+                    {log.activityName}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {log.startTime} - {log.endTime}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this activity?')) {
+                        // Delete activity logic here
+                      }
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl transition-colors text-sm"
+                    style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => onNavigate('staff-edit-log', log)}
+                    className="bg-[#155323] text-white px-6 py-3 rounded-xl hover:bg-[#0d3a18] transition-all"
+                    style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center mt-8">
+          <button 
+            onClick={() => onNavigate('staff-log')}
+            className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-8 py-3 rounded-xl transition-colors"
+            style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+          >
+            +Add Log
+          </button>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-log" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Edit Log Screen
+function StaffEditLogScreen({ onNavigate, log, onLogout }: { onNavigate: (screen: StaffScreen) => void; log: any; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [activityName, setActivityName] = useState(log?.activityName || '');
+  const [startHour, setStartHour] = useState(log?.startHour || '12');
+  const [startMinute, setStartMinute] = useState(log?.startMinute || '00');
+  const [startPeriod, setStartPeriod] = useState(log?.startPeriod || 'PM');
+  const [endHour, setEndHour] = useState(log?.endHour || '01');
+  const [endMinute, setEndMinute] = useState(log?.endMinute || '00');
+  const [endPeriod, setEndPeriod] = useState(log?.endPeriod || 'PM');
+  const [notes, setNotes] = useState(log?.notes || '');
+  
+  // Initialize selected children from log
+  const allChildren = ['Noah Bennett', 'Lucas Carter', 'Ava Martinez', 'Alex James', 'Amy James', 'Rob James', 'Sofia Patel', 'Emma Parker', 'Liam Thompson'];
+  const [selectedChildren, setSelectedChildren] = useState<string[]>(
+    log?.children?.filter((c: any) => c.selected).map((c: any) => c.name) || []
+  );
+  const [behavioralNotes, setBehavioralNotes] = useState<{ child: string; note: string }[]>(
+    log?.children?.filter((c: any) => c.selected && c.behavioralNote).map((c: any) => ({ child: c.name, note: c.behavioralNote })) || []
+  );
+  const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
+  const [showBehavioralChildDropdown, setShowBehavioralChildDropdown] = useState(false);
+
+  const handleChildSelection = (child: string, checked: boolean) => {
+    if (checked) {
+      setSelectedChildren([...selectedChildren, child]);
+    } else {
+      setSelectedChildren(selectedChildren.filter(c => c !== child));
+      // Remove behavioral notes for this child if they exist
+      setBehavioralNotes(behavioralNotes.filter(note => note.child !== child));
+    }
+  };
+
+  const allChildrenSelected = selectedChildren.length === allChildren.length;
+  const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
+
+  const toggleSelectAllChildren = () => {
+    if (allChildrenSelected) {
+      setSelectedChildren([]);
+      setBehavioralNotes([]);
+    } else {
+      setSelectedChildren([...allChildren]);
+    }
+  };
+
+  const addBehavioralNote = (child: string) => {
+    setBehavioralNotes([...behavioralNotes, { child, note: '' }]);
+    setShowBehavioralChildDropdown(false);
+  };
+
+  const updateBehavioralNote = (index: number, note: string) => {
+    const newNotes = [...behavioralNotes];
+    newNotes[index].note = note;
+    setBehavioralNotes(newNotes);
+  };
+
+  const removeBehavioralNote = (index: number) => {
+    setBehavioralNotes(behavioralNotes.filter((_, i) => i !== index));
+  };
+
+  const availableChildrenForNotes = selectedChildren.filter(
+    child => !behavioralNotes.some(note => note.child === child)
+  );
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-2 flex justify-start">
+              <button 
+                onClick={() => onNavigate('staff-view-logs')}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Edit Activity
+              </h1>
+            </div>
+            <div className="col-span-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 md:p-8">
+        <div className="space-y-6">
+          {/* Activity Name */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Activity Name</label>
+            <input
+              type="text"
+              value={activityName}
+              onChange={(e) => setActivityName(e.target.value)}
+              placeholder="Enter activity name"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+            />
+          </div>
+
+          {/* Start Time */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Start Time</label>
+            <div className="flex items-center gap-2">
+              <select
+                value={startHour}
+                onChange={(e) => setStartHour(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = String(i + 1).padStart(2, '0');
+                  return <option key={hour} value={hour}>{hour}</option>;
+                })}
+              </select>
+              <span className="text-lg">:</span>
+              <select
+                value={startMinute}
+                onChange={(e) => setStartMinute(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const minute = String(i).padStart(2, '0');
+                  return <option key={minute} value={minute}>{minute}</option>;
+                })}
+              </select>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setStartPeriod('AM')}
+                  className={`px-3 py-2 rounded text-xs ${startPeriod === 'AM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  AM
+                </button>
+                <button
+                  onClick={() => setStartPeriod('PM')}
+                  className={`px-3 py-2 rounded text-xs ${startPeriod === 'PM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* End Time */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>End Time</label>
+            <div className="flex items-center gap-2">
+              <select
+                value={endHour}
+                onChange={(e) => setEndHour(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = String(i + 1).padStart(2, '0');
+                  return <option key={hour} value={hour}>{hour}</option>;
+                })}
+              </select>
+              <span className="text-lg">:</span>
+              <select
+                value={endMinute}
+                onChange={(e) => setEndMinute(e.target.value)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center"
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const minute = String(i).padStart(2, '0');
+                  return <option key={minute} value={minute}>{minute}</option>;
+                })}
+              </select>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setEndPeriod('AM')}
+                  className={`px-3 py-2 rounded text-xs ${endPeriod === 'AM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  AM
+                </button>
+                <button
+                  onClick={() => setEndPeriod('PM')}
+                  className={`px-3 py-2 rounded text-xs ${endPeriod === 'PM' ? 'bg-[#2196f3] text-white' : 'bg-gray-200'}`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Select Children */}
+          <div className="relative">
+            <button
+              onClick={() => setShowChildrenDropdown(!showChildrenDropdown)}
+              className="w-full bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              <span>Select Children</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {showChildrenDropdown && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
+                {/* Select All / Deselect All */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer">
+                  <button
+                    onClick={toggleSelectAllChildren}
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
+                      allChildrenSelected ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                    }`}
+                  >
+                    {allChildrenSelected && (
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                      </svg>
+                    )}
+                    {someChildrenSelected && (
+                      <div className="w-3 h-0.5 bg-[#2c2c2c]" />
+                    )}
+                  </button>
+                  <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    {allChildrenSelected ? 'Deselect All' : 'Select All'}
+                  </span>
+                </div>
+                
+                {allChildren.map(child => (
+                  <div key={child} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child, !selectedChildren.includes(child))}>
+                    <button
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
+                        selectedChildren.includes(child) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                      }`}
+                    >
+                      {selectedChildren.includes(child) && (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                        </svg>
+                      )}
+                    </button>
+                    <span className="text-sm">{child}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedChildren.length > 0 && (
+              <div className="mt-2 text-sm text-gray-600">
+                Selected: {selectedChildren.join(', ')}
+              </div>
+            )}
+          </div>
+
+          {/* General Notes */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>General Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Notes for this activity..."
+              className="w-full h-32 px-4 py-3 border border-gray-300 rounded-xl resize-none"
+            />
+          </div>
+
+          {/* Behavioral Notes Section */}
+          {selectedChildren.length > 0 && (
+            <div className="space-y-4 border-t border-gray-200 pt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                  Behavioral Notes
+                </h3>
+                {availableChildrenForNotes.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowBehavioralChildDropdown(!showBehavioralChildDropdown)}
+                      className="w-8 h-8 flex items-center justify-center bg-[#155323] hover:bg-[#0f3d1a] text-white rounded-full transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                    {showBehavioralChildDropdown && (
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
+                        {availableChildrenForNotes.map(child => (
+                          <button
+                            key={child}
+                            onClick={() => addBehavioralNote(child)}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                          >
+                            {child}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {behavioralNotes.length > 0 ? (
+                <div className="space-y-4">
+                  {behavioralNotes.map((note, index) => (
+                    <div key={index} className="space-y-2 p-4 bg-gray-50 rounded-xl relative">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                          {note.child}
+                        </label>
+                        <button
+                          onClick={() => removeBehavioralNote(index)}
+                          className="text-red-600 hover:text-red-700 p-1"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <textarea
+                        value={note.note}
+                        onChange={(e) => updateBehavioralNote(index, e.target.value)}
+                        placeholder={`Add behavioral notes for ${note.child}...`}
+                        className="w-full h-24 px-4 py-3 border border-gray-300 rounded-xl resize-none text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  Click the + button to add behavioral notes for specific children
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-4">
+            <button
+              onClick={() => onNavigate('staff-view-logs')}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-12 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={() => onNavigate('staff-view-logs')}
+              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-log" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Forms Screen
+function StaffFormsScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const forms = [
+    { 
+      id: 1, 
+      parentName: 'James John', 
+      formCount: 1,
+      status: 'pending',
+      submittedForms: [
+        {
+          id: 1,
+          title: 'Drumheller Field Trip Permission Form',
+          parentGuardianName: 'James John',
+          contactNumber: '(403) 555-1234',
+          emergencyContact: '(403) 555-5678',
+          additionalNotes: 'My child has a nut allergy, please ensure they do not have access to any nuts during the trip.',
+          signature: 'James John',
+          submittedDate: 'Nov 20, 2025'
+        }
+      ]
+    },
+    { 
+      id: 2, 
+      parentName: 'Sarah James', 
+      formCount: 1,
+      status: 'pending',
+      submittedForms: [
+        {
+          id: 2,
+          title: 'Drumheller Field Trip Permission Form',
+          parentGuardianName: 'Sarah James',
+          contactNumber: '(403) 555-2345',
+          emergencyContact: '(403) 555-6789',
+          additionalNotes: 'Please make sure my child wears sunscreen.',
+          signature: 'Sarah James',
+          submittedDate: 'Nov 22, 2025'
+        }
+      ]
+    },
+    { 
+      id: 3, 
+      parentName: 'Amy Alex', 
+      formCount: 1,
+      status: 'pending',
+      submittedForms: [
+        {
+          id: 3,
+          title: 'Drumheller Field Trip Permission Form',
+          parentGuardianName: 'Amy Alex',
+          contactNumber: '(403) 555-3456',
+          emergencyContact: '(403) 555-7890',
+          additionalNotes: 'My child gets motion sickness on buses.',
+          signature: 'Amy Alex',
+          submittedDate: 'Nov 22, 2025'
+        }
+      ]
+    },
+    { 
+      id: 4, 
+      parentName: 'Steve John', 
+      formCount: 1,
+      status: 'completed',
+      submittedForms: [
+        {
+          id: 4,
+          title: 'Drumheller Field Trip Permission Form',
+          parentGuardianName: 'Steve John',
+          contactNumber: '(403) 123-1112',
+          emergencyContact: '(403) 123-2221',
+          additionalNotes: '',
+          signature: 'Signed',
+          submittedDate: 'Nov 23, 2025'
+        }
+      ]
+    },
+    { 
+      id: 5, 
+      parentName: 'Bob Cane', 
+      formCount: 1,
+      status: 'completed',
+      submittedForms: [
+        {
+          id: 5,
+          title: 'Drumheller Field Trip Permission Form',
+          parentGuardianName: 'Bob Cane',
+          contactNumber: '(825) 123-0001',
+          emergencyContact: '(825) 123-1000',
+          additionalNotes: '',
+          signature: 'Signed',
+          submittedDate: 'Nov 23, 2025'
+        }
+      ]
+    },
+    { 
+      id: 6, 
+      parentName: 'Sally James', 
+      formCount: 1,
+      status: 'completed',
+      submittedForms: [
+        {
+          id: 6,
+          title: 'Drumheller Field Trip Permission Form',
+          parentGuardianName: 'Sally James',
+          contactNumber: '(587) 123-1234',
+          emergencyContact: '(403) 123-4321',
+          additionalNotes: '',
+          signature: 'Signed',
+          submittedDate: 'Nov 23, 2025'
+        }
+      ]
+    },
+  ];
+
+  const pendingForms = forms.filter(f => f.status === 'pending');
+  const completedForms = forms.filter(f => f.status === 'completed');
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center mb-4">
+            <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+              Approve Forms
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        {/* Pending Forms Section */}
+        <div className="mb-8">
+          <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+            Pending Forms
+          </h2>
+          <div className="space-y-4">
+            {pendingForms.map(form => (
+              <div
+                key={form.id}
+                onClick={() => onNavigate('staff-form-detail', form)}
+                className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-[rgba(110,190,127,0.43)] flex items-center justify-center">
+                    <User className="w-6 h-6 text-[#155323]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      {form.parentName}
+                    </p>
+                    <p className="text-sm text-[#71727a]">Pending Review</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Completed Forms Section */}
+        <div>
+          <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+            Completed Forms
+          </h2>
+          <div className="space-y-4">
+            {completedForms.map(form => (
+              <div
+                key={form.id}
+                onClick={() => onNavigate('staff-form-detail', form)}
+                className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[rgba(110,190,127,0.43)] flex items-center justify-center">
+                      <User className="w-6 h-6 text-[#155323]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {form.parentName}
+                      </p>
+                      <p className="text-sm text-[#71727a]">Completed</p>
+                    </div>
+                  </div>
+                  <div className="bg-[#ed3241] rounded-full w-6 h-6 flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">{form.formCount}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-forms" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Form Detail Screen
+function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNavigate: (screen: StaffScreen) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-2 flex justify-start">
+              <button 
+                onClick={() => onNavigate('staff-forms')}
+                className="w-[30px] h-[29px] hover:opacity-80 transition-opacity"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Drumheller Field Trip Permission Form
+              </h1>
+            </div>
+            <div className="col-span-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="space-y-6">
+          {form?.submittedForms?.map((submittedForm: any, index: number) => (
+            <div key={submittedForm.id} className="bg-white rounded-3xl shadow-lg p-8">
+              <div className="space-y-6">
+                {/* Form Document Section */}
+                <div className="bg-[#f2f3f7] rounded-xl p-6">
+                  <h3 className="text-lg mb-3" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                    Form Document
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Download a copy of this form for your records
+                  </p>
+                  <button
+                    onClick={() => alert('PDF download would start here')}
+                    className="flex items-center gap-2 bg-[#BF6A02] hover:bg-[#A55A02] text-white py-3 px-6 rounded-lg transition-all shadow-md"
+                    style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download PDF
+                  </button>
+                </div>
+
+                {/* Submitted Information */}
+                <div>
+                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                    Parent/Guardian Name
+                  </label>
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+                    {submittedForm.parentGuardianName}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                    Contact Number
+                  </label>
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+                    {submittedForm.contactNumber}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                    Emergency Contact
+                  </label>
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
+                    {submittedForm.emergencyContact}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                    Additional Notes
+                  </label>
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg min-h-[100px]">
+                    <p className={submittedForm.additionalNotes ? 'text-gray-700' : 'text-gray-400'}>
+                      {submittedForm.additionalNotes || 'Any additional information...'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* E-Signature Section */}
+                <div>
+                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                    E-Signature *
+                  </label>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Parent signature below
+                  </p>
+                  <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
+                    <p className="text-2xl italic text-gray-800" style={{ fontFamily: 'Brush Script MT, cursive' }}>
+                      {submittedForm.signature}
+                    </p>
+                  </div>
+                </div>
+
+                {form.status === 'completed' ? (
+                  <div className="flex justify-center mt-6 gap-4">
+                    <button 
+                      onClick={() => {
+                        alert(`Form "${submittedForm.title}" approved!`);
+                        onNavigate('staff-forms');
+                      }}
+                      className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors"
+                      style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+                    >
+                      Approve Form
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex justify-center mt-6">
+                    <button 
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete the form from ${form.parentName}?`)) {
+                          alert('Form deleted!');
+                          onNavigate('staff-forms');
+                        }
+                      }}
+                      className="bg-[#ed3241] hover:bg-[#d42635] text-white px-16 py-4 rounded-xl transition-colors"
+                      style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+                    >
+                      Delete Form
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-forms" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Fees Screen
+function StaffFeesScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffScreen) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const children = [
+    { id: 1, name: 'Noah Bennett', tuition: 0, events: 20, total: 20, status: 'outstanding' },
+    { id: 2, name: 'Lucas Carter', tuition: 0, events: 0, total: 0, status: 'paid' },
+    { id: 3, name: 'Ava Martinez', tuition: 500, events: 40, total: 540, status: 'outstanding' },
+    { id: 4, name: 'Alex James', tuition: 0, events: 0, total: 0, status: 'paid' },
+    { id: 5, name: 'Amy James', tuition: 0, events: 20, total: 20, status: 'outstanding' },
+    { id: 6, name: 'Rob James', tuition: 0, events: 0, total: 0, status: 'paid' },
+    { id: 7, name: 'Sofia Patel', tuition: 500, events: 0, total: 500, status: 'outstanding' },
+    { id: 8, name: 'Emma Parker', tuition: 0, events: 0, total: 0, status: 'paid' },
+    { id: 9, name: 'Liam Thompson', tuition: 0, events: 40, total: 40, status: 'outstanding' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-center items-center mb-4">
+            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Fees
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button 
+              onClick={() => onNavigate('staff-add-fee')}
+              className="bg-[#155323] text-white px-6 py-3 rounded-xl hover:bg-[#0d3a18] transition-all"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              + Add Fee
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="space-y-3">
+          {children.map(child => (
+            <div
+              key={child.id}
+              className="bg-[#f2f3f7] rounded-xl p-4"
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="text-lg mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+                    {child.name}
+                  </h3>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>Tuition: ${child.tuition}</p>
+                    <p>Events: ${child.events}</p>
+                    <p className="pt-1 border-t border-gray-300" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                      Total: ${child.total}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span 
+                    className={`px-4 py-2 rounded-xl text-sm ${
+                      child.status === 'paid' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                    style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+                  >
+                    {child.status === 'paid' ? 'Paid' : 'Outstanding'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-fees" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Staff Add Fee Screen
+function StaffAddFeeScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffScreen) => void; onLogout?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [feeType, setFeeType] = useState<'tuition' | 'event'>('event');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
+
+  const allChildren = [
+    'Noah Bennett',
+    'Lucas Carter',
+    'Ava Martinez',
+    'Alex James',
+    'Amy James',
+    'Rob James',
+    'Sofia Patel',
+    'Emma Parker',
+    'Liam Thompson'
+  ];
+
+  const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+
+  const handleChildSelection = (child: string, checked: boolean) => {
+    if (checked) {
+      setSelectedChildren([...selectedChildren, child]);
+    } else {
+      setSelectedChildren(selectedChildren.filter(c => c !== child));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedChildren([...allChildren]);
+    } else {
+      setSelectedChildren([]);
+    }
+  };
+
+  const allChildrenSelected = selectedChildren.length === allChildren.length;
+  const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
+
+  const handleSubmit = () => {
+    if (selectedChildren.length === 0) {
+      alert('Please select at least one child');
+      return;
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    
+    alert(`Fee of $${amount} added to ${selectedChildren.length} child(ren)`);
+    onNavigate('staff-fees');
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-20">
+      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Logo size="small" />
+            <button onClick={() => setShowMenu(!showMenu)}>
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {showMenu && (
+            <div className="mb-4 space-y-2">
+              <button 
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-1 flex justify-start">
+              <button 
+                onClick={() => onNavigate('staff-fees')}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="col-span-10 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Add Fee
+              </h1>
+            </div>
+            <div className="col-span-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="space-y-6">
+          {/* Fee Type Selection */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Fee Type
+            </label>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setFeeType('event')}
+                className={`flex-1 px-6 py-3 rounded-xl border-2 transition-colors ${
+                  feeType === 'event'
+                    ? 'border-[#155323] bg-[#155323] text-white'
+                    : 'border-gray-300 bg-white text-gray-700'
+                }`}
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Event
+              </button>
+              <button
+                onClick={() => setFeeType('tuition')}
+                className={`flex-1 px-6 py-3 rounded-xl border-2 transition-colors ${
+                  feeType === 'tuition'
+                    ? 'border-[#155323] bg-[#155323] text-white'
+                    : 'border-gray-300 bg-white text-gray-700'
+                }`}
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Tuition
+              </button>
+            </div>
+          </div>
+
+          {/* Amount */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Amount ($)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Description
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={feeType === 'event' ? 'e.g., Drumheller Field Trip' : 'e.g., December Tuition'}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+            />
+          </div>
+
+          {/* Children Selection */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Select Children
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowChildrenDropdown(!showChildrenDropdown)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl flex justify-between items-center bg-white"
+              >
+                <span className="text-gray-600">
+                  {selectedChildren.length === 0
+                    ? 'Select children'
+                    : `${selectedChildren.length} child(ren) selected`}
+                </span>
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              </button>
+
+              {showChildrenDropdown && (
+                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-xl shadow-lg max-h-80 overflow-y-auto">
+                  <div className="p-3 border-b border-gray-200 bg-gray-50">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={allChildrenSelected}
+                        ref={(input) => {
+                          if (input) {
+                            input.indeterminate = someChildrenSelected;
+                          }
+                        }}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-300"
+                      />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        Select All
+                      </span>
+                    </label>
+                  </div>
+                  {allChildren.map((child) => (
+                    <div key={child} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedChildren.includes(child)}
+                          onChange={(e) => handleChildSelection(child, e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-300"
+                        />
+                        <span>{child}</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {selectedChildren.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedChildren.map((child) => (
+                  <div
+                    key={child}
+                    className="bg-[#155323] text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2"
+                  >
+                    <span>{child}</span>
+                    <button
+                      onClick={() => handleChildSelection(child, false)}
+                      className="hover:bg-white/20 rounded-full p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-4">
+            <button
+              onClick={() => onNavigate('staff-fees')}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-12 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSubmit}
+              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Add Fee
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <StaffBottomNav current="staff-fees" onNavigate={onNavigate} />
+    </div>
+  );
+}
+
+// Main Staff App Component
+export default function StaffApp({ onLogout }: { onLogout?: () => void }) {
+  const [currentScreen, setCurrentScreen] = useState<StaffScreen>('staff-home');
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [attendance, setAttendance] = useState({
+    'Noah Bennett': true,
+    'Lucas Carter': true,
+    'Ava Martinez': true,
+    'Alex James': true,
+    'Amy James': true,
+    'Rob James': true,
+    'Sofia Patel': true,
+    'Emma Parker': true,
+    'Liam Thompson': true,
+  });
+
+  // All events state (not filtered by child)
+  const [events, setEvents] = useState([
+    { id: 1, title: 'Drumheller Field Trip', date: new Date(2025, 10, 7) },
+    { id: 2, title: 'Calgary Zoo Visit', date: new Date(2025, 10, 14) },
+    { id: 3, title: 'Telus Spark Science Center', date: new Date(2025, 10, 21) },
+    { id: 4, title: 'Holiday Concert', date: new Date(2025, 11, 15) },
+    { id: 5, title: 'Winter Party', date: new Date(2025, 11, 20) },
+  ]);
+
+  // Activity logs state
+  const [logs, setLogs] = useState([
+    { 
+      id: 1, 
+      activityName: 'Nap Time', 
+      startTime: '12:00pm', 
+      endTime: '1:00pm',
+      startHour: '12',
+      startMinute: '00',
+      startPeriod: 'PM',
+      endHour: '01',
+      endMinute: '00',
+      endPeriod: 'PM',
+      notes: 'All children rested well',
+      children: [
+        { name: 'Noah Bennett', selected: true, behavioralNote: 'Slept peacefully for the full hour' },
+        { name: 'Lucas Carter', selected: true, behavioralNote: 'Had difficulty settling down initially' },
+        { name: 'Ava Martinez', selected: true, behavioralNote: 'Fell asleep quickly' },
+        { name: 'Alex James', selected: true, behavioralNote: '' },
+        { name: 'Amy James', selected: false, behavioralNote: '' },
+        { name: 'Rob James', selected: true, behavioralNote: 'Woke up after 30 minutes' },
+        { name: 'Sofia Patel', selected: true, behavioralNote: '' },
+        { name: 'Emma Parker', selected: true, behavioralNote: 'Very calm and relaxed' },
+        { name: 'Liam Thompson', selected: true, behavioralNote: '' },
+      ]
+    },
+    { 
+      id: 2, 
+      activityName: 'Lunch', 
+      startTime: '11:00am', 
+      endTime: '12:00pm',
+      startHour: '11',
+      startMinute: '00',
+      startPeriod: 'AM',
+      endHour: '12',
+      endMinute: '00',
+      endPeriod: 'PM',
+      notes: 'Served pasta and vegetables',
+      children: [
+        { name: 'Noah Bennett', selected: true, behavioralNote: 'Ate everything on plate' },
+        { name: 'Lucas Carter', selected: true, behavioralNote: 'Did not like vegetables' },
+        { name: 'Ava Martinez', selected: true, behavioralNote: 'Asked for seconds' },
+        { name: 'Alex James', selected: true, behavioralNote: '' },
+        { name: 'Amy James', selected: true, behavioralNote: '' },
+        { name: 'Rob James', selected: true, behavioralNote: 'Good table manners' },
+        { name: 'Sofia Patel', selected: false, behavioralNote: '' },
+        { name: 'Emma Parker', selected: true, behavioralNote: '' },
+        { name: 'Liam Thompson', selected: true, behavioralNote: 'Spilled water but cleaned up nicely' },
+      ]
+    },
+    { 
+      id: 3, 
+      activityName: 'Story Time', 
+      startTime: '10:00am', 
+      endTime: '11:00am',
+      startHour: '10',
+      startMinute: '00',
+      startPeriod: 'AM',
+      endHour: '11',
+      endMinute: '00',
+      endPeriod: 'AM',
+      notes: 'Read "The Very Hungry Caterpillar"',
+      children: [
+        { name: 'Noah Bennett', selected: true, behavioralNote: 'Very engaged, answered questions' },
+        { name: 'Lucas Carter', selected: true, behavioralNote: '' },
+        { name: 'Ava Martinez', selected: true, behavioralNote: 'Loved the pictures' },
+        { name: 'Alex James', selected: true, behavioralNote: '' },
+        { name: 'Amy James', selected: true, behavioralNote: '' },
+        { name: 'Rob James', selected: true, behavioralNote: '' },
+        { name: 'Sofia Patel', selected: true, behavioralNote: 'Asked to read it again' },
+        { name: 'Emma Parker', selected: true, behavioralNote: '' },
+        { name: 'Liam Thompson', selected: true, behavioralNote: 'Sat quietly and listened' },
+      ]
+    },
+  ]);
+
+  const [selectedLog, setSelectedLog] = useState<any>(null);
+
+  const addLog = (logData: any) => {
+    const newLog = {
+      id: logs.length + 1,
+      ...logData
+    };
+    setLogs([newLog, ...logs]);
+  };
+
+  const addEvent = (eventData: any) => {
+    const newEvent = {
+      id: events.length + 1,
+      ...eventData
+    };
+    setEvents([...events, newEvent].sort((a, b) => a.date.getTime() - b.date.getTime()));
+  };
+
+  const navigate = (screen: StaffScreen, data?: any) => {
+    setCurrentScreen(screen);
+    if (screen === 'staff-event-details' || screen === 'staff-edit-event') setSelectedEvent(data);
+    if (screen === 'staff-edit-log') setSelectedLog(data);
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'staff-home':
+        return <StaffHomeScreen onNavigate={navigate} events={events} onLogout={onLogout} />;
+      case 'staff-log':
+        return <StaffLogScreen onNavigate={navigate} onAddLog={addLog} onLogout={onLogout} />;
+      case 'staff-class-list':
+        return <StaffClassListScreen onNavigate={navigate} attendance={attendance} onLogout={onLogout} />;
+      case 'staff-attendance':
+        return <StaffAttendanceScreen onNavigate={navigate} attendance={attendance} setAttendance={setAttendance} onLogout={onLogout} />;
+      case 'staff-events':
+        return <StaffEventsScreen events={events} onNavigate={navigate} onLogout={onLogout} />;
+      case 'staff-event-details':
+        return <StaffEventDetailsScreen event={selectedEvent} onNavigate={navigate} onLogout={onLogout} />;
+      case 'staff-add-event':
+        return <StaffAddEditEventScreen onNavigate={navigate} mode="add" onAddEvent={addEvent} onLogout={onLogout} />;
+      case 'staff-edit-event':
+        return <StaffAddEditEventScreen event={selectedEvent} onNavigate={navigate} mode="edit" onAddEvent={addEvent} onLogout={onLogout} />;
+      case 'staff-view-logs':
+        return <StaffViewLogsScreen onNavigate={navigate} logs={logs} onLogout={onLogout} />;
+      case 'staff-edit-log':
+        return <StaffEditLogScreen onNavigate={navigate} log={selectedLog} onLogout={onLogout} />;
+      case 'staff-forms':
+        return <StaffFormsScreen onNavigate={navigate} onLogout={onLogout} />;
+      case 'staff-form-detail':
+        return <StaffFormDetailScreen form={selectedEvent} onNavigate={navigate} onLogout={onLogout} />;
+      case 'staff-fees':
+        return <StaffFeesScreen onNavigate={navigate} onLogout={onLogout} />;
+      case 'staff-add-fee':
+        return <StaffAddFeeScreen onNavigate={navigate} onLogout={onLogout} />;
+      default:
+        return <StaffHomeScreen onNavigate={navigate} events={events} onLogout={onLogout} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {renderScreen()}
+    </div>
+  );
+}
