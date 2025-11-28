@@ -14,6 +14,23 @@ import StaffApp from './StaffApp';
 import { Logo } from './components/Logo';
 import SignatureCanvas from 'react-signature-canvas';
 
+// Helpers to safely parse/normalize dates coming from different event/form shapes
+const safeEventDate = (event: any): Date | null => {
+  if (!event) return null;
+  const maybe = event.dateObj ?? event.date ?? null;
+  if (!maybe) return null;
+  const d = maybe instanceof Date ? maybe : new Date(maybe);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+const safeDueDate = (form: any): Date | null => {
+  if (!form) return null;
+  const maybe = form.dueDateObj ?? form.dueDate ?? null;
+  if (!maybe) return null;
+  const d = maybe instanceof Date ? maybe : new Date(maybe);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 type Screen = 
   | 'landing' 
   | 'login' 
@@ -44,19 +61,203 @@ export default function App() {
     setCurrentScreen('landing');
   };
 
-  // Sample data
+  // Canonical shared children list used by both Parent and Staff apps
   const children = [
-    { id: 1, name: 'Rob' },
-    { id: 2, name: 'Emma' },
+    {
+      childId: "c1",
+      parentId: "p1",
+      name: "Noah Bennett",
+      age: 4,
+      allergies: "None",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c2",
+      parentId: "p1",
+      name: "Lucas Carter",
+      age: 3,
+      allergies: "Peanuts",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c3",
+      parentId: "p2",
+      name: "Ava Martinez",
+      age: 5,
+      allergies: "None",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c4",
+      parentId: "p3",
+      name: "Alex James",
+      age: 5,
+      allergies: "None",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c5",
+      parentId: "p3",
+      name: "Amy James",
+      age: 4,
+      allergies: "None",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c6",
+      parentId: "p3",
+      name: "Rob James",
+      age: 6,
+      allergies: "None",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c7",
+      parentId: "p4",
+      name: "Sofia Patel",
+      age: 4,
+      allergies: "Dairy",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c8",
+      parentId: "p5",
+      name: "Emma Parker",
+      age: 3,
+      allergies: "None",
+      medical: "N/A",
+      contact: "(888)-888-8888"
+    },
+    {
+      childId: "c9",
+      parentId: "p6",
+      name: "Liam Thompson",
+      age: 4,
+      allergies: "None",
+      medical: "Asthma",
+      contact: "(888)-888-8888"
+    }
   ];
 
-  const events = [
-    { id: 1, title: 'Drumheller Field Trip', date: 'November 7, 2025', dateObj: new Date(2025, 10, 7), child: 'Rob' },
-    { id: 2, title: 'Calgary Zoo Field Trip', date: 'December 12, 2025', dateObj: new Date(2025, 11, 12), child: 'Rob' },
-    { id: 3, title: 'Telus Spark Field Trip', date: 'January 3, 2026', dateObj: new Date(2026, 0, 3), child: 'Rob' },
-    { id: 4, title: 'Science Fair', date: 'November 15, 2025', dateObj: new Date(2025, 10, 15), child: 'Emma' },
-    { id: 5, title: 'Art Gallery Visit', date: 'December 5, 2025', dateObj: new Date(2025, 11, 5), child: 'Emma' },
-  ];
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      title: 'Drumheller Field Trip',
+      location: 'Royal Tyrrell Museum, Drumheller, AB',
+      date: new Date(2025, 10, 7),
+      startTime: '08:00am',
+      endTime: '03:30pm',
+      description: 'Visit the Royal Tyrrell Museum to explore dinosaur fossils and exhibits.',
+      notes: 'Please pack a lunch, water, and comfortable walking shoes.',
+      children: ['c1', 'c3', 'c6'],
+      hasForm: true
+    },
+    {
+      id: 2,
+      title: 'Calgary Zoo Visit',
+      location: 'Calgary Zoo, Calgary, AB',
+      date: new Date(2025, 10, 14),
+      startTime: '09:00am',
+      endTime: '02:00pm',
+      description: 'A day at the Calgary Zoo to learn about animals and conservation.',
+      notes: 'Bring a water bottle and hat.',
+      children: ['c2', 'c4'],
+      hasForm: true
+    },
+    {
+      id: 3,
+      title: 'Telus Spark Science Center',
+      location: 'TELUS Spark, Calgary, AB',
+      date: new Date(2025, 10, 21),
+      startTime: '10:00am',
+      endTime: '03:00pm',
+      description: 'Interactive science exhibits and workshops.',
+      notes: 'Permission form required.',
+      children: ['c5'],
+      hasForm: true
+    },
+    {
+      id: 4,
+      title: 'Holiday Concert',
+      location: 'Community Hall',
+      date: new Date(2025, 11, 15),
+      startTime: '06:00pm',
+      endTime: '07:30pm',
+      description: 'Annual holiday concert with songs and performances.',
+      notes: 'Parents invited.',
+      children: ['c6', 'c7'],
+      hasForm: true
+    },
+    {
+      id: 5,
+      title: 'Winter Party',
+      location: 'Sunnyview Daycare',
+      date: new Date(2025, 11, 20),
+      startTime: '01:00pm',
+      endTime: '03:00pm',
+      description: 'Indoor activities and treats to celebrate the season.',
+      notes: 'Wear warm clothing.',
+      children: ['c1', 'c2', 'c3', 'c4'],
+      hasForm: true
+    },
+    {
+      id: 6,
+      title: 'Calgary Zoo Field Trip',
+      location: 'Calgary Zoo, Calgary, AB',
+      date: new Date(2025, 11, 12),
+      startTime: '09:00am',
+      endTime: '02:00pm',
+      description: 'A day at the Calgary Zoo to learn about animals and conservation.',
+      notes: 'Bring a water bottle and hat.',
+      children: ['c6'],
+      hasForm: true
+    },
+    {
+      id: 7,
+      title: 'Telus Spark Field Trip',
+      location: 'TELUS Spark, Calgary, AB',
+      date: new Date(2026, 0, 3),
+      startTime: '10:00am',
+      endTime: '03:00pm',
+      description: 'Interactive science exhibits and workshops.',
+      notes: 'Permission form required.',
+      children: ['c6'],
+      hasForm: true
+    },
+    {
+      id: 8,
+      title: 'Science Fair',
+      location: 'Community Center',
+      date: new Date(2025, 10, 15),
+      startTime: '02:00pm',
+      endTime: '05:00pm',
+      description: 'Annual science fair with student projects.',
+      notes: 'Bring your project by 1:00 PM.',
+      children: ['c8'],
+      hasForm: true
+    },
+    {
+      id: 9,
+      title: 'Art Gallery Visit',
+      location: 'Local Art Gallery',
+      date: new Date(2025, 11, 5),
+      startTime: '10:00am',
+      endTime: '12:00pm',
+      description: 'Visit the local art gallery to explore various art exhibits.',
+      notes: 'Meet at the main entrance.',
+      children: ['c8'],
+      hasForm: true
+    }
+  ]);
+
+  
 
   const activities = [
     { 
@@ -91,37 +292,77 @@ export default function App() {
     },
   ];
 
-  const allForms = [
-    { id: 1, title: 'Drumheller Field Trip Permission Form', dueDate: 'Nov 5, 2025', dueDateObj: new Date('2025-11-05'), status: 'pending', child: 'Rob' },
-    { id: 2, title: 'Emergency Contact Update', dueDate: 'Nov 10, 2025', dueDateObj: new Date('2025-11-10'), status: 'pending', child: 'Rob' },
-    { id: 3, title: 'Calgary Zoo Field Trip Permission Form', dueDate: 'Dec 10, 2025', dueDateObj: new Date('2025-12-10'), status: 'pending', child: 'Rob' },
-    { id: 4, title: 'Telus Spark Field Trip Permission Form', dueDate: 'Dec 30, 2025', dueDateObj: new Date('2025-12-30'), status: 'pending', child: 'Rob' },
-    { id: 5, title: 'Medical Information Update', dueDate: 'Completed', dueDateObj: new Date('2025-10-15'), status: 'completed', child: 'Rob' },
-    { id: 6, title: 'Science Fair Permission Form', dueDate: 'Nov 12, 2025', dueDateObj: new Date('2025-11-12'), status: 'pending', child: 'Emma' },
-    { id: 7, title: 'Art Gallery Permission Form', dueDate: 'Dec 2, 2025', dueDateObj: new Date('2025-12-02'), status: 'pending', child: 'Emma' },
-  ];
+  const [allForms, setAllForms] = useState([
+    // Event-linked forms
+    { id: 'f1', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c1', dueDate: new Date('2025-11-05'), status: 'outstanding' },
+    { id: 'f2', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c3', dueDate: new Date('2025-11-05'), status: 'pending' },
+    { id: 'f3', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c6', dueDate: new Date('2025-11-05'), status: 'completed' },
+    { id: 'f4', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c2', dueDate: new Date('2025-11-12'), status: 'outstanding' },
+    { id: 'f5', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c4', dueDate: new Date('2025-11-12'), status: 'pending' },
+    { id: 'f6', title: 'Telus Spark Science Center Permission Form', eventId: 3, childId: 'c5', dueDate: new Date('2025-11-19'), status: 'outstanding' },
+    { id: 'f7', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c6', dueDate: new Date('2025-12-01'), status: 'pending' },
+    { id: 'f8', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c7', dueDate: new Date('2025-12-01'), status: 'completed' },
+    { id: 'f9', title: 'Winter Party Permission Form', eventId: 5, childId: 'c1', dueDate: new Date('2025-12-15'), status: 'outstanding' },
+    { id: 'f10', title: 'Winter Party Permission Form', eventId: 5, childId: 'c2', dueDate: new Date('2025-12-15'), status: 'pending' },
+    { id: 'f11', title: 'Winter Party Permission Form', eventId: 5, childId: 'c3', dueDate: new Date('2025-12-15'), status: 'completed' },
+    { id: 'f12', title: 'Winter Party Permission Form', eventId: 5, childId: 'c4', dueDate: new Date('2025-12-15'), status: 'pending' },
+    { id: 'f13', title: 'Calgary Zoo Field Trip Permission Form', eventId: 6, childId: 'c6', dueDate: new Date('2025-12-10'), status: 'outstanding' },
+    { id: 'f14', title: 'Telus Spark Field Trip Permission Form', eventId: 7, childId: 'c6', dueDate: new Date('2025-12-23'), status: 'pending' },
+    { id: 'f15', title: 'Science Fair Permission Form', eventId: 8, childId: 'c8', dueDate: new Date('2025-11-10'), status: 'completed' },
+    { id: 'f16', title: 'Art Gallery Visit Permission Form', eventId: 9, childId: 'c8', dueDate: new Date('2025-11-28'), status: 'outstanding' },
+  ]);
 
-  // Sort forms: pending first (by earliest due date), then completed
-  const forms = allForms.sort((a, b) => {
-    // If statuses are different, pending comes first
-    if (a.status !== b.status) {
-      return a.status === 'pending' ? -1 : 1;
-    }
-    // If both have same status, sort by due date
-    return a.dueDateObj.getTime() - b.dueDateObj.getTime();
+
+  // Sort forms: outstanding -> pending -> completed (by due date within each status)
+  const forms = [...allForms].sort((a, b) => {
+    // Status priority: outstanding (0) -> pending (1) -> completed (2)
+    const statusPriority: { [key: string]: number } = { outstanding: 0, pending: 1, completed: 2 };
+    const priorityDiff = (statusPriority[a.status] ?? 999) - (statusPriority[b.status] ?? 999);
+    if (priorityDiff !== 0) return priorityDiff;
+    // Within same status, sort by due date
+    return (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0);
   });
 
-  const payments = [
-    { id: 1, name: 'Monthly Tuition - Rob', amount: '$850.00', dueDate: 'November 30, 2025', description: 'Monthly tuition payment for Rob', child: 'Rob' },
-    { id: 2, name: 'Activity Fee', amount: '$50.00', dueDate: 'November 15, 2025', description: 'Activity fee for special programs and materials', child: 'Rob' },
-    { id: 3, name: 'Drumheller Field Trip Fee', amount: '$35.00', dueDate: 'November 7, 2025', description: 'Field trip to Drumheller Royal Tyrrell Museum', child: 'Rob' },
-    { id: 4, name: 'Monthly Tuition - Emma', amount: '$850.00', dueDate: 'November 30, 2025', description: 'Monthly tuition payment for Emma', child: 'Emma' },
-    { id: 5, name: 'Art Supplies Fee', amount: '$25.00', dueDate: 'November 20, 2025', description: 'Art supplies fee for creative activities', child: 'Emma' },
-  ];
+  const [allPayments, setAllPayments] = useState([
+    // Tuition payments (eventId: null) - due on the 1st of each month
+    { paymentId: 'p1', childId: 'c6', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
+    { paymentId: 'p2', childId: 'c8', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
+    { paymentId: 'p3', childId: 'c3', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
+    { paymentId: 'p4', childId: 'c7', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
+    
+    // Event-related fees (due same day as form)
+    { paymentId: 'p5', childId: 'c1', amount: 35.00, description: 'Drumheller Field Trip Fee', status: 'outstanding', eventId: 1, dueDate: new Date('2025-11-05') },
+    { paymentId: 'p6', childId: 'c3', amount: 35.00, description: 'Drumheller Field Trip Fee', status: 'pending', eventId: 1, dueDate: new Date('2025-11-05') },
+    { paymentId: 'p7', childId: 'c6', amount: 35.00, description: 'Drumheller Field Trip Fee', status: 'completed', eventId: 1, dueDate: new Date('2025-11-05') },
+    { paymentId: 'p8', childId: 'c2', amount: 25.00, description: 'Calgary Zoo Visit Fee', status: 'outstanding', eventId: 2, dueDate: new Date('2025-11-12') },
+    { paymentId: 'p9', childId: 'c4', amount: 25.00, description: 'Calgary Zoo Visit Fee', status: 'pending', eventId: 2, dueDate: new Date('2025-11-12') },
+    { paymentId: 'p10', childId: 'c5', amount: 30.00, description: 'Telus Spark Science Center Fee', status: 'outstanding', eventId: 3, dueDate: new Date('2025-11-19') },
+    { paymentId: 'p11', childId: 'c6', amount: 25.00, description: 'Holiday Concert Fee', status: 'pending', eventId: 4, dueDate: new Date('2025-12-01') },
+    { paymentId: 'p12', childId: 'c7', amount: 25.00, description: 'Holiday Concert Fee', status: 'completed', eventId: 4, dueDate: new Date('2025-12-01') },
+    { paymentId: 'p13', childId: 'c1', amount: 20.00, description: 'Winter Party Fee', status: 'outstanding', eventId: 5, dueDate: new Date('2025-12-15') },
+    { paymentId: 'p14', childId: 'c2', amount: 20.00, description: 'Winter Party Fee', status: 'pending', eventId: 5, dueDate: new Date('2025-12-15') },
+    { paymentId: 'p15', childId: 'c3', amount: 20.00, description: 'Winter Party Fee', status: 'completed', eventId: 5, dueDate: new Date('2025-12-15') },
+    { paymentId: 'p16', childId: 'c4', amount: 20.00, description: 'Winter Party Fee', status: 'pending', eventId: 5, dueDate: new Date('2025-12-15') },
+  ]);
+
+  // Sort payments: outstanding -> pending -> completed (by description within each status)
+  const payments = [...allPayments].sort((a, b) => {
+    const statusPriority: { [key: string]: number } = { outstanding: 0, pending: 1, completed: 2 };
+    const priorityDiff = (statusPriority[a.status] ?? 999) - (statusPriority[b.status] ?? 999);
+    if (priorityDiff !== 0) return priorityDiff;
+    return (a.description ?? '').localeCompare(b.description ?? '');
+  });
 
   const navigate = (screen: Screen, data?: any) => {
     setCurrentScreen(screen);
-    if (screen === 'event-details') setSelectedEvent(data);
+    if (screen === 'event-details') {
+      if (data?.event) {
+        setSelectedEvent(data.event);
+        if (data.childName) setSelectedChild(data.childName);
+      } else {
+        setSelectedEvent(data);
+      }
+    }
     if (screen === 'activity-details') setSelectedActivity(data);
     if (screen === 'form-view') setSelectedForm(data);
     if (screen === 'daily-activity' && data) setSelectedChild(data);
@@ -145,7 +386,7 @@ export default function App() {
       case 'events':
         return <EventsScreen events={events} children={children} onNavigate={navigate} />;
       case 'event-details':
-        return <EventDetailsScreen event={selectedEvent} forms={forms} payments={payments} onNavigate={navigate} />;
+        return <EventDetailsScreen event={selectedEvent} forms={forms} payments={payments} selectedChild={selectedChild} children={children} onNavigate={navigate} />
       case 'my-children':
         return <MyChildrenScreen onNavigate={navigate} />;
       case 'daily-activity':
@@ -155,17 +396,17 @@ export default function App() {
       case 'forms':
         return <FormsScreen forms={forms} children={children} onNavigate={navigate} />;
       case 'form-view':
-        return <FormViewScreen form={selectedForm} onNavigate={navigate} />;
+        return <FormViewScreen form={selectedForm} onNavigate={navigate} allForms={allForms} setAllForms={setAllForms} />;
       case 'payments':
-        return <PaymentsScreen onNavigate={navigate} paymentData={selectedPayment} payments={payments} children={children} />;
+        return <PaymentsScreen onNavigate={navigate} payments={payments} children={children} allPayments={allPayments} setAllPayments={setAllPayments} />;
       default:
         return <LandingScreen onNavigate={navigate} />;
     }
   };
 
-  // If in staff mode, render StaffApp
+  // If in staff mode, render StaffApp and pass canonical children list
   if (appMode === 'staff') {
-    return <StaffApp onLogout={handleStaffLogout} />;
+    return <StaffApp onLogout={handleStaffLogout} childrenList={children} events={events} setEvents={setEvents} forms={forms} setForms={setAllForms} payments={payments} setPayments={setAllPayments} />;
   }
 
   return (
@@ -568,15 +809,16 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
   
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  // Filter events for current month
+  // Filter events for current month (use safe parsing)
   const eventsInMonth = events.filter(event => {
-    const eventDate = event.dateObj;
-    return eventDate.getMonth() === currentMonth.getMonth() && 
-           eventDate.getFullYear() === currentMonth.getFullYear();
+    const d = safeEventDate(event);
+    return d && d.getMonth() === currentMonth.getMonth() && d.getFullYear() === currentMonth.getFullYear();
   });
 
-  // Get event dates as day numbers
-  const eventDays = eventsInMonth.map(event => event.dateObj.getDate());
+  // Get event dates as day numbers (safe)
+  const eventDays = eventsInMonth
+    .map(event => safeEventDate(event)?.getDate())
+    .filter((n): n is number => typeof n === 'number');
 
   // Check if a day has an event
   const hasEvent = (day: number) => eventDays.includes(day);
@@ -682,11 +924,11 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
           ) : (
             <div className="space-y-6">
               {children.map(child => {
-                const childEvents = eventsInMonth.filter(event => event.child === child.name);
+                const childEvents = eventsInMonth.filter((event: any) => event.children && event.children.includes(child.childId));
                 if (childEvents.length === 0) return null;
                 
                 return (
-                  <div key={child.id}>
+                  <div key={child.childId}>
                     <h3 className="text-lg mb-3 text-[#155323]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
                       {child.name}
                     </h3>
@@ -698,16 +940,27 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
                         >
                           <div className="flex items-center gap-4">
                             <div className="bg-[#BF6A02] text-white rounded-lg px-3 py-2 text-center min-w-[60px]">
-                              <div className="text-xs">
-                                {event.dateObj.toLocaleDateString('en-US', { month: 'short' })}
-                              </div>
-                              <div className="text-xl font-bold">
-                                {event.dateObj.getDate()}
-                              </div>
+                                <div className="text-xs">
+                                  {(() => {
+                                    const d = safeEventDate(event);
+                                    return d ? d.toLocaleDateString('en-US', { month: 'short' }) : '';
+                                  })()}
+                                </div>
+                                <div className="text-xl font-bold">
+                                  {(() => {
+                                    const d = safeEventDate(event);
+                                    return d ? d.getDate() : '';
+                                  })()}
+                                </div>
                             </div>
                             <div>
                               <h4 className="font-semibold">{event.title}</h4>
-                              <p className="text-sm text-gray-600">{event.date}</p>
+                              <p className="text-sm text-gray-600">
+                                {(() => {
+                                  const d = safeEventDate(event);
+                                  return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                                })()}
+                              </p>
                             </div>
                           </div>
                           <button
@@ -781,24 +1034,29 @@ function EventsScreen({ events, children, onNavigate }: { events: any[]; childre
         <Tabs defaultValue={children[0]?.name} className="w-full">
           <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${children.length}, minmax(0, 1fr))` }}>
             {children.map((child) => (
-              <TabsTrigger key={child.id} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
+              <TabsTrigger key={child.childId} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
                 {child.name}
               </TabsTrigger>
             ))}
           </TabsList>
           {children.map((child) => (
-            <TabsContent key={child.id} value={child.name}>
+            <TabsContent key={child.childId} value={child.name}>
               <div className="space-y-4">
-                {events.filter(event => event.child === child.name).map(event => (
+                {events.filter((event: any) => event.children && event.children.includes(child.childId)).map(event => (
                   <div key={event.id} className="bg-[#f2f3f7] rounded-2xl p-6 flex justify-between items-center hover:shadow-lg transition-all">
                     <div>
                       <h3 className="text-lg mb-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
                         {event.title}
                       </h3>
-                      <p className="text-sm text-gray-600">{event.date}</p>
+                      <p className="text-sm text-gray-600">
+                        {(() => {
+                          const d = safeEventDate(event);
+                          return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                        })()}
+                      </p>
                     </div>
                     <button
-                      onClick={() => onNavigate('event-details', event)}
+                      onClick={() => onNavigate('event-details', { event, childName: child.name })}
                       className="bg-[#155323] text-white px-6 py-3 rounded-xl hover:bg-[#0d3a18] transition-all"
                       style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
                     >
@@ -806,7 +1064,7 @@ function EventsScreen({ events, children, onNavigate }: { events: any[]; childre
                     </button>
                   </div>
                 ))}
-                {events.filter(event => event.child === child.name).length === 0 && (
+                {events.filter((event: any) => event.children && event.children.includes(child.childId)).length === 0 && (
                   <div className="text-center py-12 text-gray-500">
                     No upcoming events for {child.name}
                   </div>
@@ -823,12 +1081,15 @@ function EventsScreen({ events, children, onNavigate }: { events: any[]; childre
 }
 
 // Event Details Screen
-function EventDetailsScreen({ event, forms, payments, onNavigate }: { event: any; forms: any[]; payments: any[]; onNavigate: (screen: Screen, data?: any) => void }) {
+function EventDetailsScreen({ event, forms, payments, selectedChild, children, onNavigate }: { event: any; forms: any[]; payments: any[]; selectedChild: string; children: any[]; onNavigate: (screen: Screen, data?: any) => void }) {
   const [showMenu, setShowMenu] = useState(false);
   
-  // Find the corresponding form for this event
-  const eventForm = event ? forms.find(form => 
-    form.title.toLowerCase().includes(event.title.toLowerCase().split(' ')[0]) // Match by first word (Drumheller, Calgary, Telus)
+  // Find the child object for the selected child
+  const child = children.find(c => c.name === selectedChild);
+  
+  // Find the corresponding form for this event and child with outstanding status
+  const eventForm = event && child ? forms.find(form => 
+    form.eventId === event.id && form.childId === child.childId && form.status === 'outstanding'
   ) : null;
 
   // Find the corresponding payment for this event
@@ -882,7 +1143,7 @@ function EventDetailsScreen({ event, forms, payments, onNavigate }: { event: any
               Location:
             </h3>
             <p className="text-[#0088ff] text-lg">
-              1500 N Dinosaur Trail, Drumheller, AB T0J 0Y0
+              {event?.location || 'Location not specified'}
             </p>
           </div>
 
@@ -892,7 +1153,10 @@ function EventDetailsScreen({ event, forms, payments, onNavigate }: { event: any
               Date:
             </h3>
             <p className="text-gray-600 text-lg">
-              November 7, 2025
+              {(() => {
+                const d = safeEventDate(event);
+                return d ? d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'Date not specified';
+              })()}
             </p>
           </div>
 
@@ -902,7 +1166,7 @@ function EventDetailsScreen({ event, forms, payments, onNavigate }: { event: any
               Duration:
             </h3>
             <p className="text-gray-600 text-lg">
-              8:00am-3:30pm
+              {event?.startTime && event?.endTime ? `${event.startTime}-${event.endTime}` : 'Duration not specified'}
             </p>
           </div>
 
@@ -912,7 +1176,7 @@ function EventDetailsScreen({ event, forms, payments, onNavigate }: { event: any
               Description:
             </h3>
             <p className="text-gray-600">
-              Get ready for a roaring adventure! Sunnyview daycare will be visiting the Royal Tyrrell Museum in Drumheller to explore real dinosaur fossils, interactive exhibits, and hands-on discovery zones. Children will learn about prehistoric creatures and enjoy a fun-filled day of exploration and curiosity.
+              {event?.description || 'No description provided.'}
             </p>
           </div>
 
@@ -922,19 +1186,21 @@ function EventDetailsScreen({ event, forms, payments, onNavigate }: { event: any
               Notes:
             </h3>
             <p className="text-gray-600">
-              Please pack a lunch, water bottle, and comfortable walking shoes!
+              {event?.notes || 'No notes.'}
             </p>
           </div>
 
           {/* Buttons */}
           <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => eventForm ? onNavigate('form-view', eventForm) : onNavigate('forms')}
-              className="bg-[rgba(191,106,2,0.76)] hover:bg-[rgba(191,106,2,0.9)] text-white rounded-xl transition-all flex items-center justify-center"
-              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
-            >
-              Form
-            </button>
+            {eventForm && (
+              <button
+                onClick={() => onNavigate('form-view', eventForm)}
+                className="bg-[rgba(191,106,2,0.76)] hover:bg-[rgba(191,106,2,0.9)] text-white rounded-xl transition-all flex items-center justify-center"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
+              >
+                Form
+              </button>
+            )}
             <button
               onClick={() => eventPayment ? onNavigate('payments', eventPayment) : onNavigate('payments')}
               className="bg-[#009951] hover:bg-[#007a40] text-white rounded-xl transition-all flex items-center justify-center"
@@ -1218,31 +1484,35 @@ function FormsScreen({ forms, children, onNavigate }: { forms: any[]; children: 
         <Tabs defaultValue={children[0]?.name} className="w-full">
           <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${children.length}, minmax(0, 1fr))` }}>
             {children.map((child) => (
-              <TabsTrigger key={child.id} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
+              <TabsTrigger key={child.childId} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
                 {child.name}
               </TabsTrigger>
             ))}
           </TabsList>
           {children.map((child) => (
-            <TabsContent key={child.id} value={child.name}>
+            <TabsContent key={child.childId} value={child.name}>
               <div className="space-y-4">
-                {forms.filter(form => form.child === child.name).map(form => (
+                {forms.filter(form => form.childId === child.childId).map(form => (
                   <div key={form.id} className={`rounded-2xl p-6 flex justify-between items-center hover:shadow-lg transition-all ${
-                    form.status === 'completed' ? 'bg-green-50' : 'bg-[#f2f3f7]'
+                    form.status === 'completed' ? 'bg-green-50' : form.status === 'pending' ? 'bg-yellow-50' : 'bg-[#f2f3f7]'
                   }`}>
                     <div className="flex-1">
                       <h3 className="text-lg mb-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
                         {form.title}
                       </h3>
-                      <p className="text-sm text-gray-600">Due: {form.dueDate}</p>
-                      {form.status === 'completed' && (
-                        <span className="inline-block mt-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs">
-                          Completed
-                        </span>
-                      )}
+                      <p className="text-sm text-gray-600">
+                        Due: {form.dueDate ? form.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                      </p>
+                      <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold`}
+                        style={{
+                          backgroundColor: form.status === 'completed' ? '#10b981' : form.status === 'pending' ? '#eab308' : '#ef4444',
+                          color: 'white'
+                        }}>
+                        {form.status.charAt(0).toUpperCase() + form.status.slice(1)}
+                      </span>
                     </div>
                     <div className="w-24 flex-shrink-0 ml-4">
-                      {form.status === 'pending' && (
+                      {form.status === 'outstanding' && (
                         <button
                           onClick={() => onNavigate('form-view', form)}
                           className="w-full bg-[#155323] text-white rounded-xl hover:bg-[#0d3a18] transition-all whitespace-nowrap flex items-center justify-center"
@@ -1254,7 +1524,7 @@ function FormsScreen({ forms, children, onNavigate }: { forms: any[]; children: 
                     </div>
                   </div>
                 ))}
-                {forms.filter(form => form.child === child.name).length === 0 && (
+                {forms.filter(form => form.childId === child.childId).length === 0 && (
                   <div className="text-center py-12 text-gray-500">
                     No forms for {child.name}
                   </div>
@@ -1271,7 +1541,7 @@ function FormsScreen({ forms, children, onNavigate }: { forms: any[]; children: 
 }
 
 // Form View Screen
-function FormViewScreen({ form, onNavigate }: { form: any; onNavigate: (screen: Screen) => void }) {
+function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any; onNavigate: (screen: Screen) => void; allForms: any[]; setAllForms: (forms: any[]) => void }) {
   const [isConsentChecked, setIsConsentChecked] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const signatureRef = useRef<SignatureCanvas>(null);
@@ -1437,7 +1707,14 @@ function FormViewScreen({ form, onNavigate }: { form: any; onNavigate: (screen: 
             </div>
 
             <button
-              onClick={() => onNavigate('forms')}
+              onClick={() => {
+                // Update form status to pending
+                const updatedForms = allForms.map(f => 
+                  f.id === form.id ? { ...f, status: 'pending' } : f
+                );
+                setAllForms(updatedForms);
+                onNavigate('forms');
+              }}
               className="w-full bg-[#155323] text-white py-4 px-6 rounded-xl hover:bg-[#0d3a18] transition-all shadow-lg"
               style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}
             >
@@ -1451,9 +1728,9 @@ function FormViewScreen({ form, onNavigate }: { form: any; onNavigate: (screen: 
 }
 
 // Payments Screen
-function PaymentsScreen({ onNavigate, paymentData, payments, children }: { onNavigate: (screen: Screen, data?: any) => void; paymentData?: any; payments: any[]; children: any[] }) {
-  const [step, setStep] = useState(paymentData ? 2 : 1);
-  const [selectedPayment, setSelectedPayment] = useState(paymentData || null);
+function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPayments }: { onNavigate: (screen: Screen, data?: any) => void; payments: any[]; children: any[]; allPayments: any[]; setAllPayments: (payments: any[]) => void }) {
+  const [step, setStep] = useState(1);
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -1499,34 +1776,47 @@ function PaymentsScreen({ onNavigate, paymentData, payments, children }: { onNav
           <Tabs defaultValue={children[0]?.name} className="w-full">
             <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${children.length}, minmax(0, 1fr))` }}>
               {children.map((child) => (
-                <TabsTrigger key={child.id} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
+                <TabsTrigger key={child.childId} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
                   {child.name}
                 </TabsTrigger>
               ))}
             </TabsList>
             {children.map((child) => (
-              <TabsContent key={child.id} value={child.name}>
+              <TabsContent key={child.childId} value={child.name}>
                 <div className="space-y-4">
-                  {payments.filter(payment => payment.child === child.name).map(payment => (
-                    <div key={payment.id} className="bg-white rounded-3xl shadow-lg p-8">
-                      <div className="flex justify-between items-start">
+                  {payments.filter(payment => payment.childId === child.childId).map(payment => (
+                    <div key={payment.paymentId} className={`rounded-xl p-6 hover:shadow-md transition-shadow border-l-4 ${
+                      payment.status === 'outstanding' ? 'bg-[#f2f3f7] border-[#ef4444]' :
+                      payment.status === 'pending' ? 'bg-white border-[#eab308]' :
+                      'bg-green-50 border-green-500'
+                    }`}>
+                      <div className="flex justify-between items-center">
                         <div>
-                          <h3 className="text-xl mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                            {payment.name}
+                          <h3 className="text-lg mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                            {payment.description}
                           </h3>
-                          <p className="text-2xl font-semibold text-[#BF6A02] mb-2">{payment.amount}</p>
-                          <p className="text-sm text-gray-600">Due: {payment.dueDate}</p>
+                          <p className="text-2xl font-semibold text-[#BF6A02] mb-2">${payment.amount.toFixed(2)}</p>
+                          <p className="text-sm text-gray-600 mb-2">Due: {payment.dueDate ? payment.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</p>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold`}
+                            style={{
+                              backgroundColor: payment.status === 'completed' ? '#10b981' : payment.status === 'pending' ? '#eab308' : '#ef4444',
+                              color: 'white'
+                            }}>
+                            {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                          </span>
                         </div>
-                        <button
-                          onClick={() => {
-                            setSelectedPayment(payment);
-                            setStep(2);
-                          }}
-                          className="bg-[#155323] text-white py-3 px-6 rounded-xl hover:bg-[#0d3a18] transition-all whitespace-nowrap flex items-center justify-center"
-                          style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
-                        >
-                          Pay Now
-                        </button>
+                        {payment.status === 'outstanding' && (
+                          <button
+                            onClick={() => {
+                              setSelectedPayment(payment);
+                              setStep(2);
+                            }}
+                            className="bg-[#155323] text-white py-3 px-6 rounded-xl hover:bg-[#0d3a18] transition-all whitespace-nowrap flex items-center justify-center"
+                            style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+                          >
+                            Pay Now
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1554,19 +1844,16 @@ function PaymentsScreen({ onNavigate, paymentData, payments, children }: { onNav
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Fee:</span>
-                  <span className="font-semibold">{selectedPayment.name}</span>
+                  <span className="text-gray-600">Description:</span>
+                  <span className="font-semibold">{selectedPayment.description}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Amount:</span>
-                  <span className="text-xl font-semibold text-[#BF6A02]">{selectedPayment.amount}</span>
+                  <span className="text-xl font-semibold text-[#BF6A02]">${selectedPayment.amount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Due Date:</span>
-                  <span className="font-semibold">{selectedPayment.dueDate}</span>
-                </div>
-                <div className="pt-2 border-t border-gray-300">
-                  <p className="text-sm text-gray-600">{selectedPayment.description}</p>
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-semibold">{selectedPayment.status}</span>
                 </div>
               </div>
             </div>
@@ -1619,7 +1906,14 @@ function PaymentsScreen({ onNavigate, paymentData, payments, children }: { onNav
             </div>
 
             <button
-              onClick={() => setStep(3)}
+              onClick={() => {
+                // Update payment status to pending
+                const updatedPayments = allPayments.map(p =>
+                  p.paymentId === selectedPayment.paymentId ? { ...p, status: 'pending' } : p
+                );
+                setAllPayments(updatedPayments);
+                setStep(3);
+              }}
               className="w-full bg-[#155323] text-white py-4 px-6 rounded-xl hover:bg-[#0d3a18] transition-all shadow-lg"
               style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}
             >

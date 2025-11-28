@@ -4,6 +4,16 @@ import { Logo } from './components/Logo';
 
 type StaffScreen = 'staff-home' | 'staff-log' | 'staff-class-list' | 'staff-events' | 'staff-event-details' | 'staff-attendance' | 'staff-add-event' | 'staff-edit-event' | 'staff-view-logs' | 'staff-edit-log' | 'staff-forms' | 'staff-form-detail' | 'staff-fees' | 'staff-add-fee';
 
+type Child = {
+  childId: string;
+  parentId: string;
+  name: string;
+  age: number;
+  allergies: string;
+  medical: string;
+  contact: string;
+};
+
 // Staff Bottom Navigation Component
 function StaffBottomNav({ current, onNavigate }: { current: string; onNavigate: (screen: StaffScreen) => void }) {
   const navItems = [
@@ -195,6 +205,7 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
                     <div>
                       <h4 className="font-semibold">{event.title}</h4>
                       <p className="text-sm text-gray-600">{event.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      <p className="text-xs text-gray-500">Attendees: {event.children ? event.children.length : 0}</p>
                     </div>
                   </div>
                   <button
@@ -216,7 +227,7 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
 }
 
 // Staff Log Activity Screen
-function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (screen: StaffScreen) => void; onAddLog: (logData: any) => void; onLogout?: () => void }) {
+function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNavigate: (screen: StaffScreen) => void; onAddLog: (logData: any) => void; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
   const [activityType, setActivityType] = useState('');
@@ -227,23 +238,21 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
   const [endMinute, setEndMinute] = useState('00');
   const [endPeriod, setEndPeriod] = useState('PM');
   const [notes, setNotes] = useState('');
-  const [behavioralNotes, setBehavioralNotes] = useState<{ child: string; note: string }[]>([]);
+  const [behavioralNotes, setBehavioralNotes] = useState<{ childId: string; note: string }[]>([]);
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
   const [showBehavioralChildDropdown, setShowBehavioralChildDropdown] = useState(false);
-
-  const children = ['Noah Bennett', 'Lucas Carter', 'Ava Martinez', 'Alex James', 'Amy James', 'Rob James', 'Sofia Patel', 'Emma Parker', 'Liam Thompson'];
 
   const handleChildSelection = (child: string, checked: boolean) => {
     if (checked) {
       setSelectedChildren([...selectedChildren, child]);
     } else {
-      setSelectedChildren(selectedChildren.filter(c => c !== child));
+      setSelectedChildren((prev: string[]) => prev.filter((c: string) => c !== child));
       // Remove behavioral notes for this child if they exist
-      setBehavioralNotes(behavioralNotes.filter(note => note.child !== child));
+      setBehavioralNotes((notes: any[]) => notes.filter((note: any) => note.childId !== child));
     }
   };
 
-  const allChildrenSelected = selectedChildren.length === children.length;
+  const allChildrenSelected = selectedChildren.length === childrenList.length;
   const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
 
   const toggleSelectAllChildren = () => {
@@ -251,12 +260,12 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
       setSelectedChildren([]);
       setBehavioralNotes([]);
     } else {
-      setSelectedChildren([...children]);
+      setSelectedChildren(childrenList.map(c => c.childId));
     }
   };
 
-  const addBehavioralNote = (child: string) => {
-    setBehavioralNotes([...behavioralNotes, { child, note: '' }]);
+  const addBehavioralNote = (childId: string) => {
+    setBehavioralNotes([...behavioralNotes, { childId, note: '' }]);
     setShowBehavioralChildDropdown(false);
   };
 
@@ -267,11 +276,11 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
   };
 
   const removeBehavioralNote = (index: number) => {
-    setBehavioralNotes(behavioralNotes.filter((_, i) => i !== index));
+    setBehavioralNotes((notes: any[]) => notes.filter((_: any, i: number) => i !== index));
   };
 
   const availableChildrenForNotes = selectedChildren.filter(
-    child => !behavioralNotes.some(note => note.child === child)
+    (childId: string) => !behavioralNotes.some((note: any) => note.childId === childId)
   );
 
   const handleSubmit = () => {
@@ -289,15 +298,15 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
     const startTime = `${startHour}:${startMinute}${startPeriod.toLowerCase()}`;
     const endTime = `${endHour}:${endMinute}${endPeriod.toLowerCase()}`;
 
-    // Create children array with all children and their behavioral notes
-    const allChildren = ['Noah Bennett', 'Lucas Carter', 'Ava Martinez', 'Alex James', 'Amy James', 'Rob James', 'Sofia Patel', 'Emma Parker', 'Liam Thompson'];
-    const childrenData = allChildren.map(childName => {
-      const isSelected = selectedChildren.includes(childName);
-      const behavioralNote = behavioralNotes.find(note => note.child === childName);
+    // Create children array with canonical childrenList and their behavioral notes
+    const childrenData = childrenList.map(child => {
+      const isSelected = selectedChildren.includes(child.childId);
+      const noteObj = behavioralNotes.find((n: any) => n.childId === child.childId);
       return {
-        name: childName,
+        childId: child.childId,
+        name: child.name,
         selected: isSelected,
-        behavioralNote: behavioralNote ? behavioralNote.note : ''
+        behavioralNote: noteObj ? noteObj.note : ''
       };
     });
 
@@ -389,27 +398,27 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
                   </span>
                 </div>
                 
-                {children.map(child => (
-                  <div key={child} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child, !selectedChildren.includes(child))}>
+                {childrenList.map(child => (
+                  <div key={child.childId} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child.childId, !selectedChildren.includes(child.childId))}>
                     <button
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
-                        selectedChildren.includes(child) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                        selectedChildren.includes(child.childId) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
                       }`}
                     >
-                      {selectedChildren.includes(child) && (
+                      {selectedChildren.includes(child.childId) && (
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
                         </svg>
                       )}
                     </button>
-                    <span className="text-sm">{child}</span>
+                    <span className="text-sm">{child.name}</span>
                   </div>
                 ))}
               </div>
             )}
             {selectedChildren.length > 0 && (
               <div className="mt-2 text-sm text-gray-600">
-                Selected: {selectedChildren.join(', ')}
+                Selected: {selectedChildren.map(id => childrenList.find(c => c.childId === id)?.name).filter(Boolean).join(', ')}
               </div>
             )}
           </div>
@@ -540,16 +549,19 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
                     </button>
                     {showBehavioralChildDropdown && (
                       <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
-                        {availableChildrenForNotes.map(child => (
-                          <button
-                            key={child}
-                            onClick={() => addBehavioralNote(child)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
-                          >
-                            {child}
-                          </button>
-                        ))}
-                      </div>
+                          {availableChildrenForNotes.map(childId => {
+                            const childName = childrenList.find(c => c.childId === childId)?.name || childId;
+                            return (
+                              <button
+                                key={childId}
+                                onClick={() => addBehavioralNote(childId)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                              >
+                                {childName}
+                              </button>
+                            );
+                          })}
+                        </div>
                     )}
                   </div>
                 )}
@@ -557,11 +569,13 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
 
               {behavioralNotes.length > 0 ? (
                 <div className="space-y-4">
-                  {behavioralNotes.map((note, index) => (
+                  {behavioralNotes.map((note, index) => {
+                    const childName = childrenList.find(c => c.childId === note.childId)?.name || note.childId;
+                    return (
                     <div key={index} className="space-y-2 p-4 bg-gray-50 rounded-xl relative">
                       <div className="flex items-center justify-between">
                         <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-                          {note.child}
+                          {childName}
                         </label>
                         <button
                           onClick={() => removeBehavioralNote(index)}
@@ -575,11 +589,12 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
                       <textarea
                         value={note.note}
                         onChange={(e) => updateBehavioralNote(index, e.target.value)}
-                        placeholder={`Add behavioral notes for ${note.child}...`}
+                        placeholder={`Add behavioral notes for ${childName}...`}
                         className="w-full h-24 px-4 py-3 border border-gray-300 rounded-xl resize-none text-sm"
                       />
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 text-center py-4">
@@ -619,28 +634,29 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout }: { onNavigate: (scree
 }
 
 // Staff Attendance Screen (accessed from Class List)
-function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout }: { 
+function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout, childrenList }: { 
   onNavigate: (screen: StaffScreen) => void;
   attendance: { [key: string]: boolean };
   setAttendance: (attendance: { [key: string]: boolean }) => void;
   onLogout?: () => void;
+  childrenList: Child[];
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
-  const toggleAttendance = (name: string) => {
-    setAttendance({ ...attendance, [name]: !attendance[name] });
+  const toggleAttendance = (childId: string) => {
+    setAttendance({ ...attendance, [childId]: !attendance[childId] });
   };
 
-  const students = Object.keys(attendance);
+  const students = childrenList;
 
-  const allChecked = students.every(student => attendance[student]);
-  const someChecked = students.some(student => attendance[student]) && !allChecked;
+  const allChecked = students.every(student => attendance[student.childId]);
+  const someChecked = students.some(student => attendance[student.childId]) && !allChecked;
 
   const toggleSelectAll = () => {
     const newAttendance: { [key: string]: boolean } = {};
     const newValue = !allChecked;
     students.forEach(student => {
-      newAttendance[student] = newValue;
+      newAttendance[student.childId] = newValue;
     });
     setAttendance(newAttendance);
   };
@@ -712,25 +728,25 @@ function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout
             </span>
           </div>
 
-          {students.map(student => (
-            <div key={student} className="flex items-center gap-3 p-2">
-              <button
-                onClick={() => toggleAttendance(student)}
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                  attendance[student] ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
-                }`}
-              >
-                {attendance[student] && (
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
-                  </svg>
-                )}
-              </button>
-              <span className="text-[#1e1e1e]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                {student}
-              </span>
-            </div>
-          ))}
+                  {students.map(student => (
+                    <div key={student.childId} className="flex items-center gap-3 p-2">
+                      <button
+                        onClick={() => toggleAttendance(student.childId)}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          attendance[student.childId] ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                        }`}
+                      >
+                        {attendance[student.childId] && (
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
+                          </svg>
+                        )}
+                      </button>
+                      <span className="text-[#1e1e1e]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {student.name}
+                      </span>
+                    </div>
+                  ))}
 
           <div className="flex justify-center pt-6">
             <button 
@@ -750,20 +766,9 @@ function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout
 }
 
 // Staff Class List Screen
-function StaffClassListScreen({ onNavigate, attendance, onLogout }: { onNavigate: (screen: StaffScreen) => void; attendance: { [key: string]: boolean }; onLogout?: () => void }) {
+function StaffClassListScreen({ onNavigate, attendance, onLogout, childrenList }: { onNavigate: (screen: StaffScreen) => void; attendance: { [key: string]: boolean }; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
-
-  const students = [
-    { name: 'Noah Bennett', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Lucas Carter', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Ava Martinez', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Alex James', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Amy James', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Rob James', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Sofia Patel', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Emma Parker', contact: '(888)-888-8888', medical: 'N/A' },
-    { name: 'Liam Thompson', contact: '(888)-888-8888', medical: 'Asthma' },
-  ];
+  const students = childrenList;
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -827,7 +832,7 @@ function StaffClassListScreen({ onNavigate, attendance, onLogout }: { onNavigate
                 <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.contact}</span>
                 <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.medical}</span>
                 <div className="flex justify-center">
-                  {attendance[student.name] ? (
+                  {attendance[student.childId] ? (
                     <span className="text-green-600 flex items-center gap-1">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -903,13 +908,14 @@ function StaffEventsScreen({ events, onNavigate, onLogout }: { events: any[]; on
               className="bg-[#f2f3f7] rounded-xl p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-center">
-                <div className="flex-1">
+                  <div className="flex-1">
                   <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                     {event.title}
                   </h3>
                   <p className="text-gray-600">
                     {event.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </p>
+                  <p className="text-sm text-gray-500">Attendees: {event.children ? event.children.length : 0}</p>
                 </div>
                 <button
                   onClick={() => onNavigate('staff-event-details', event)}
@@ -930,7 +936,7 @@ function StaffEventsScreen({ events, onNavigate, onLogout }: { events: any[]; on
 }
 
 // Staff Event Details Screen
-function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void }) {
+function StaffEventDetailsScreen({ event, onNavigate, onLogout, childrenList }: { event: any; onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -1004,7 +1010,7 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; 
               Location:
             </h3>
             <p className="text-[#0088ff] text-lg">
-              1500 N Dinosaur Trail, Drumheller, AB T0J 0Y0
+              {event?.location || 'Location not specified'}
             </p>
           </div>
 
@@ -1013,7 +1019,7 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; 
               Date:
             </h3>
             <p className="text-gray-600 text-lg">
-              {event?.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              {event?.date ? event.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Date not set'}
             </p>
           </div>
 
@@ -1022,7 +1028,7 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; 
               Duration:
             </h3>
             <p className="text-gray-600 text-lg">
-              8:00am-3:30pm
+              {event?.startTime && event?.endTime ? `${event.startTime}-${event.endTime}` : 'Duration not set'}
             </p>
           </div>
 
@@ -1031,7 +1037,7 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; 
               Description:
             </h3>
             <p className="text-gray-600">
-              Get ready for a roaring adventure! Sunnyview daycare will be visiting the Royal Tyrrell Museum in Drumheller to explore real dinosaur fossils, interactive exhibits, and hands-on discovery zones. Children will learn about prehistoric creatures and enjoy a fun-filled day of exploration and curiosity.
+              {event?.description || 'No description provided.'}
             </p>
           </div>
 
@@ -1040,9 +1046,24 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; 
               Notes:
             </h3>
             <p className="text-gray-600">
-              Please pack a lunch, water bottle, and comfortable walking shoes!
+              {event?.notes || 'No notes.'}
             </p>
           </div>
+          {event?.children && event.children.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+                Attendees:
+              </h3>
+              <ul className="list-disc list-inside">
+                {event.children.map((id: string) => {
+                  const name = childrenList.find(c => c.childId === id)?.name || id;
+                  return (
+                    <li key={id} className="text-gray-700">{name}</li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1052,7 +1073,7 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout }: { event: any; 
 }
 
 // Staff Add/Edit Event Screen
-function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout }: { event?: any; onNavigate: (screen: StaffScreen, data?: any) => void; mode: 'add' | 'edit'; onAddEvent: (eventData: any) => void; onLogout?: () => void }) {
+function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdateEvent, onLogout, childrenList }: { event?: any; onNavigate: (screen: StaffScreen, data?: any) => void; mode: 'add' | 'edit'; onAddEvent: (eventData: any) => void; onUpdateEvent?: (eventData: any) => void; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [title, setTitle] = useState(event?.title || '');
   const [location, setLocation] = useState(mode === 'edit' ? '1500 N Dinosaur Trail, Drumheller, AB T0J 0Y0' : '');
@@ -1070,31 +1091,30 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout
   const [currentMonth, setCurrentMonth] = useState(mode === 'edit' && event?.date ? event.date : new Date());
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
 
-  const allChildren = [
-    'Noah Bennett',
-    'Lucas Carter',
-    'Ava Martinez',
-    'Alex James',
-    'Amy James',
-    'Rob James',
-    'Sofia Patel',
-    'Emma Parker',
-    'Liam Thompson'
-  ];
+  const allChildren = childrenList;
 
-  const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+  const [selectedChildren, setSelectedChildren] = useState<string[]>(() => {
+    // When editing an event, convert any provided child identifiers (names or ids) to childId
+    if (mode === 'edit' && event?.children) {
+      return event.children.map((ch: any) => {
+        const found = childrenList.find(c => c.childId === ch || c.name === ch);
+        return found ? found.childId : String(ch);
+      });
+    }
+    return [];
+  });
 
-  const handleChildSelection = (child: string, checked: boolean) => {
+  const handleChildSelection = (childId: string, checked: boolean) => {
     if (checked) {
-      setSelectedChildren([...selectedChildren, child]);
+      setSelectedChildren((prev: string[]) => Array.from(new Set([...prev, childId])));
     } else {
-      setSelectedChildren(selectedChildren.filter(c => c !== child));
+      setSelectedChildren((prev: string[]) => prev.filter((c: string) => c !== childId));
     }
   };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedChildren([...allChildren]);
+      setSelectedChildren(childrenList.map(c => c.childId));
     } else {
       setSelectedChildren([]);
     }
@@ -1170,6 +1190,42 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout
     // Add the event and navigate to events screen
     onAddEvent(newEvent);
     onNavigate('staff-events');
+  };
+
+  const handleSaveChanges = () => {
+    // Validation same as create
+    if (!title.trim()) {
+      alert('Please enter an event title');
+      return;
+    }
+    if (!selectedDate) {
+      alert('Please select a date for the event');
+      return;
+    }
+    if (selectedChildren.length === 0) {
+      alert('Please select at least one child');
+      return;
+    }
+
+    // Build updated event object (preserve original id if available)
+    const updatedEvent = {
+      id: event?.id,
+      title: title.trim(),
+      date: selectedDate,
+      location: location.trim(),
+      startTime: `${startHour}:${startMinute}${startPeriod.toLowerCase()}`,
+      endTime: `${endHour}:${endMinute}${endPeriod.toLowerCase()}`,
+      description: description.trim(),
+      notes: notes.trim(),
+      formFile: formFile?.name || null,
+      children: selectedChildren
+    };
+
+    if (onUpdateEvent) {
+      onUpdateEvent(updatedEvent);
+    }
+    // Navigate back to event details
+    onNavigate('staff-event-details', updatedEvent);
   };
 
   return (
@@ -1444,15 +1500,15 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout
                     </label>
                   </div>
                   {allChildren.map((child) => (
-                    <div key={child} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                    <div key={child.childId} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={selectedChildren.includes(child)}
-                          onChange={(e) => handleChildSelection(child, e.target.checked)}
+                          checked={selectedChildren.includes(child.childId)}
+                          onChange={(e) => handleChildSelection(child.childId, e.target.checked)}
                           className="w-5 h-5 rounded border-gray-300"
                         />
-                        <span>{child}</span>
+                        <span>{child.name}</span>
                       </label>
                     </div>
                   ))}
@@ -1462,20 +1518,23 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout
 
             {selectedChildren.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {selectedChildren.map((child) => (
+                {selectedChildren.map((id) => {
+                  const childName = childrenList.find(c => c.childId === id)?.name || id;
+                  return (
                   <div
-                    key={child}
+                    key={id}
                     className="bg-[#155323] text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2"
                   >
-                    <span>{child}</span>
+                    <span>{childName}</span>
                     <button
-                      onClick={() => handleChildSelection(child, false)}
+                      onClick={() => handleChildSelection(id, false)}
                       className="hover:bg-white/20 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1564,7 +1623,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onLogout
               Cancel
             </button>
             <button 
-              onClick={mode === 'add' ? handleCreateEvent : undefined}
+              onClick={mode === 'add' ? handleCreateEvent : handleSaveChanges}
               className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors whitespace-nowrap"
               style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
             >
@@ -1684,7 +1743,7 @@ function StaffViewLogsScreen({ onNavigate, logs, onLogout }: { onNavigate: (scre
 }
 
 // Staff Edit Log Screen
-function StaffEditLogScreen({ onNavigate, log, onLogout }: { onNavigate: (screen: StaffScreen) => void; log: any; onLogout?: () => void }) {
+function StaffEditLogScreen({ onNavigate, log, onLogout, childrenList }: { onNavigate: (screen: StaffScreen) => void; log: any; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [activityName, setActivityName] = useState(log?.activityName || '');
   const [startHour, setStartHour] = useState(log?.startHour || '12');
@@ -1695,8 +1754,8 @@ function StaffEditLogScreen({ onNavigate, log, onLogout }: { onNavigate: (screen
   const [endPeriod, setEndPeriod] = useState(log?.endPeriod || 'PM');
   const [notes, setNotes] = useState(log?.notes || '');
   
-  // Initialize selected children from log
-  const allChildren = ['Noah Bennett', 'Lucas Carter', 'Ava Martinez', 'Alex James', 'Amy James', 'Rob James', 'Sofia Patel', 'Emma Parker', 'Liam Thompson'];
+  // Initialize selected children from canonical childrenList (use names for editing logs)
+  const allChildren = childrenList.map(c => c.name);
   const [selectedChildren, setSelectedChildren] = useState<string[]>(
     log?.children?.filter((c: any) => c.selected).map((c: any) => c.name) || []
   );
@@ -2052,122 +2111,46 @@ function StaffEditLogScreen({ onNavigate, log, onLogout }: { onNavigate: (screen
 }
 
 // Staff Forms Screen
-function StaffFormsScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void }) {
+function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void; forms: any[]; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
 
-  const forms = [
-    { 
-      id: 1, 
-      parentName: 'James John', 
-      formCount: 1,
-      status: 'pending',
-      submittedForms: [
-        {
-          id: 1,
-          title: 'Drumheller Field Trip Permission Form',
-          parentGuardianName: 'James John',
-          contactNumber: '(403) 555-1234',
-          emergencyContact: '(403) 555-5678',
-          additionalNotes: 'My child has a nut allergy, please ensure they do not have access to any nuts during the trip.',
-          signature: 'James John',
-          submittedDate: 'Nov 20, 2025'
-        }
-      ]
-    },
-    { 
-      id: 2, 
-      parentName: 'Sarah James', 
-      formCount: 1,
-      status: 'pending',
-      submittedForms: [
-        {
-          id: 2,
-          title: 'Drumheller Field Trip Permission Form',
-          parentGuardianName: 'Sarah James',
-          contactNumber: '(403) 555-2345',
-          emergencyContact: '(403) 555-6789',
-          additionalNotes: 'Please make sure my child wears sunscreen.',
-          signature: 'Sarah James',
-          submittedDate: 'Nov 22, 2025'
-        }
-      ]
-    },
-    { 
-      id: 3, 
-      parentName: 'Amy Alex', 
-      formCount: 1,
-      status: 'pending',
-      submittedForms: [
-        {
-          id: 3,
-          title: 'Drumheller Field Trip Permission Form',
-          parentGuardianName: 'Amy Alex',
-          contactNumber: '(403) 555-3456',
-          emergencyContact: '(403) 555-7890',
-          additionalNotes: 'My child gets motion sickness on buses.',
-          signature: 'Amy Alex',
-          submittedDate: 'Nov 22, 2025'
-        }
-      ]
-    },
-    { 
-      id: 4, 
-      parentName: 'Steve John', 
-      formCount: 1,
-      status: 'completed',
-      submittedForms: [
-        {
-          id: 4,
-          title: 'Drumheller Field Trip Permission Form',
-          parentGuardianName: 'Steve John',
-          contactNumber: '(403) 123-1112',
-          emergencyContact: '(403) 123-2221',
+  // Group forms by their status and create a parent-form structure for display
+  const formsByStatus = forms.reduce((acc: any, form: any) => {
+    const status = form.status || 'pending';
+    if (!acc[status]) {
+      acc[status] = [];
+    }
+    
+    // Find the child info for this form
+    const child = childrenList.find(c => c.childId === form.childId);
+    
+    // Check if we already have a parent entry for this form
+    const existingParentEntry = acc[status].find(f => f.id === form.id);
+    if (!existingParentEntry) {
+      acc[status].push({
+        id: form.id,
+        parentName: child?.name || 'Unknown',
+        formCount: 1,
+        status: status,
+        submittedForms: [{
+          id: form.id,
+          title: form.title,
+          parentGuardianName: child?.name || 'Unknown',
+          contactNumber: child?.contact || 'N/A',
+          emergencyContact: 'N/A',
           additionalNotes: '',
-          signature: 'Signed',
-          submittedDate: 'Nov 23, 2025'
-        }
-      ]
-    },
-    { 
-      id: 5, 
-      parentName: 'Bob Cane', 
-      formCount: 1,
-      status: 'completed',
-      submittedForms: [
-        {
-          id: 5,
-          title: 'Drumheller Field Trip Permission Form',
-          parentGuardianName: 'Bob Cane',
-          contactNumber: '(825) 123-0001',
-          emergencyContact: '(825) 123-1000',
-          additionalNotes: '',
-          signature: 'Signed',
-          submittedDate: 'Nov 23, 2025'
-        }
-      ]
-    },
-    { 
-      id: 6, 
-      parentName: 'Sally James', 
-      formCount: 1,
-      status: 'completed',
-      submittedForms: [
-        {
-          id: 6,
-          title: 'Drumheller Field Trip Permission Form',
-          parentGuardianName: 'Sally James',
-          contactNumber: '(587) 123-1234',
-          emergencyContact: '(403) 123-4321',
-          additionalNotes: '',
-          signature: 'Signed',
-          submittedDate: 'Nov 23, 2025'
-        }
-      ]
-    },
-  ];
+          signature: 'Pending',
+          submittedDate: form.dueDate ? new Date(form.dueDate).toLocaleDateString() : 'N/A',
+          formData: form
+        }]
+      });
+    }
+    return acc;
+  }, {});
 
-  const pendingForms = forms.filter(f => f.status === 'pending');
-  const completedForms = forms.filter(f => f.status === 'completed');
+  const pendingForms = formsByStatus['pending'] || [];
+  const completedForms = formsByStatus['completed'] || [];
+  const outstandingForms = formsByStatus['outstanding'] || [];
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -2200,47 +2183,19 @@ function StaffFormsScreen({ onNavigate, onLogout }: { onNavigate: (screen: Staff
       </div>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        {/* Pending Forms Section */}
-        <div className="mb-8">
-          <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-            Pending Forms
-          </h2>
-          <div className="space-y-4">
-            {pendingForms.map(form => (
-              <div
-                key={form.id}
-                onClick={() => onNavigate('staff-form-detail', form)}
-                className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[rgba(110,190,127,0.43)] flex items-center justify-center">
-                    <User className="w-6 h-6 text-[#155323]" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {form.parentName}
-                    </p>
-                    <p className="text-sm text-[#71727a]">Pending Review</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Completed Forms Section */}
-        <div>
-          <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-            Completed Forms
-          </h2>
-          <div className="space-y-4">
-            {completedForms.map(form => (
-              <div
-                key={form.id}
-                onClick={() => onNavigate('staff-form-detail', form)}
-                className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="flex items-center justify-between">
+        {/* Outstanding Forms Section */}
+        {outstandingForms.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+              Outstanding Forms
+            </h2>
+            <div className="space-y-4">
+              {outstandingForms.map(form => (
+                <div
+                  key={form.id}
+                  onClick={() => onNavigate('staff-form-detail', form)}
+                  className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-[#ef4444]"
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-[rgba(110,190,127,0.43)] flex items-center justify-center">
                       <User className="w-6 h-6 text-[#155323]" />
@@ -2249,17 +2204,79 @@ function StaffFormsScreen({ onNavigate, onLogout }: { onNavigate: (screen: Staff
                       <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
                         {form.parentName}
                       </p>
-                      <p className="text-sm text-[#71727a]">Completed</p>
+                      <p className="text-sm text-[#71727a]">Outstanding</p>
                     </div>
                   </div>
-                  <div className="bg-[#ed3241] rounded-full w-6 h-6 flex items-center justify-center">
-                    <span className="text-white text-xs font-semibold">{form.formCount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pending Forms Section */}
+        {pendingForms.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+              Pending Forms
+            </h2>
+            <div className="space-y-4">
+              {pendingForms.map(form => (
+                <div
+                  key={form.id}
+                  onClick={() => onNavigate('staff-form-detail', form)}
+                  className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-[#eab308]"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[rgba(110,190,127,0.43)] flex items-center justify-center">
+                      <User className="w-6 h-6 text-[#155323]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {form.parentName}
+                      </p>
+                      <p className="text-sm text-[#71727a]">Pending Review</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Completed Forms Section */}
+        {completedForms.length > 0 && (
+          <div>
+            <h2 className="text-xl mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+              Completed Forms
+            </h2>
+            <div className="space-y-4">
+              {completedForms.map(form => (
+                <div
+                  key={form.id}
+                  onClick={() => onNavigate('staff-form-detail', form)}
+                  className="bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-[rgba(110,190,127,0.43)] flex items-center justify-center">
+                        <User className="w-6 h-6 text-[#155323]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          {form.parentName}
+                        </p>
+                        <p className="text-sm text-[#71727a]">Completed</p>
+                      </div>
+                    </div>
+                    <div className="bg-[#ed3241] rounded-full w-6 h-6 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">{form.formCount}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <StaffBottomNav current="staff-forms" onNavigate={onNavigate} />
@@ -2316,8 +2333,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="space-y-6">
-          {form?.submittedForms?.map((submittedForm: any, index: number) => (
-            <div key={submittedForm.id} className="bg-white rounded-3xl shadow-lg p-8">
+          {form ? (
+            <div className="bg-white rounded-3xl shadow-lg p-8">
               <div className="space-y-6">
                 {/* Form Document Section */}
                 <div className="bg-[#f2f3f7] rounded-xl p-6">
@@ -2345,7 +2362,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                     Parent/Guardian Name
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                    {submittedForm.parentGuardianName}
+                    {form.parentName}
                   </div>
                 </div>
 
@@ -2354,7 +2371,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                     Contact Number
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                    {submittedForm.contactNumber}
+                    {form.emergencyContact}
                   </div>
                 </div>
 
@@ -2363,7 +2380,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                     Emergency Contact
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                    {submittedForm.emergencyContact}
+                    {form.emergencyContact}
                   </div>
                 </div>
 
@@ -2372,8 +2389,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                     Additional Notes
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg min-h-[100px]">
-                    <p className={submittedForm.additionalNotes ? 'text-gray-700' : 'text-gray-400'}>
-                      {submittedForm.additionalNotes || 'Any additional information...'}
+                      <p className={form.notes ? 'text-gray-700' : 'text-gray-400'}>
+                        {form.notes || 'Any additional information...'}
                     </p>
                   </div>
                 </div>
@@ -2388,7 +2405,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                   </p>
                   <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
                     <p className="text-2xl italic text-gray-800" style={{ fontFamily: 'Brush Script MT, cursive' }}>
-                      {submittedForm.signature}
+                      {form.signature}
                     </p>
                   </div>
                 </div>
@@ -2397,7 +2414,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                   <div className="flex justify-center mt-6 gap-4">
                     <button 
                       onClick={() => {
-                        alert(`Form "${submittedForm.title}" approved!`);
+                        alert(`Form "${form.title}" approved!`);
                         onNavigate('staff-forms');
                       }}
                       className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors"
@@ -2434,20 +2451,27 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
 }
 
 // Staff Fees Screen
-function StaffFeesScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffScreen) => void; onLogout?: () => void }) {
+function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void; payments: any[]; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
 
-  const children = [
-    { id: 1, name: 'Noah Bennett', tuition: 0, events: 20, total: 20, status: 'outstanding' },
-    { id: 2, name: 'Lucas Carter', tuition: 0, events: 0, total: 0, status: 'paid' },
-    { id: 3, name: 'Ava Martinez', tuition: 500, events: 40, total: 540, status: 'outstanding' },
-    { id: 4, name: 'Alex James', tuition: 0, events: 0, total: 0, status: 'paid' },
-    { id: 5, name: 'Amy James', tuition: 0, events: 20, total: 20, status: 'outstanding' },
-    { id: 6, name: 'Rob James', tuition: 0, events: 0, total: 0, status: 'paid' },
-    { id: 7, name: 'Sofia Patel', tuition: 500, events: 0, total: 500, status: 'outstanding' },
-    { id: 8, name: 'Emma Parker', tuition: 0, events: 0, total: 0, status: 'paid' },
-    { id: 9, name: 'Liam Thompson', tuition: 0, events: 40, total: 40, status: 'outstanding' },
-  ];
+  // Group payments by child and compute totals
+  const childPaymentMap = childrenList.reduce((acc, child) => {
+    const childPayments = payments.filter(p => p.childId === child.childId);
+    const outstanding = childPayments.filter(p => p.status === 'outstanding').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const pending = childPayments.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const total = outstanding + pending;
+    const status = outstanding > 0 ? 'outstanding' : pending > 0 ? 'pending' : 'paid';
+    
+    acc[child.childId] = {
+      name: child.name,
+      outstanding,
+      pending,
+      total,
+      status,
+      childPayments
+    };
+    return acc;
+  }, {} as any);
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -2493,39 +2517,45 @@ function StaffFeesScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffS
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="space-y-3">
-          {children.map(child => (
-            <div
-              key={child.id}
-              className="bg-[#f2f3f7] rounded-xl p-4"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-lg mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
-                    {child.name}
-                  </h3>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p>Tuition: ${child.tuition}</p>
-                    <p>Events: ${child.events}</p>
-                    <p className="pt-1 border-t border-gray-300" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                      Total: ${child.total}
-                    </p>
+          {childrenList.map(child => {
+            const paymentData = childPaymentMap[child.childId];
+            if (!paymentData) return null;
+            return (
+              <div
+                key={child.childId}
+                className={`rounded-xl p-4 border-l-4 ${
+                  paymentData.status === 'outstanding' ? 'bg-[#f2f3f7] border-[#ef4444]' :
+                  paymentData.status === 'pending' ? 'bg-white border-[#eab308]' :
+                  'bg-green-50 border-green-500'
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-lg mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+                      {paymentData.name}
+                    </h3>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p>Outstanding: <span className="font-semibold text-[#ef4444]">${paymentData.outstanding.toFixed(2)}</span></p>
+                      <p>Pending: <span className="font-semibold text-[#eab308]">${paymentData.pending.toFixed(2)}</span></p>
+                      <p className="pt-1 border-t border-gray-300" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                        Total: ${paymentData.total.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span 
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold`}
+                      style={{
+                        backgroundColor: paymentData.status === 'paid' ? '#10b981' : paymentData.status === 'pending' ? '#eab308' : '#ef4444',
+                        color: 'white'
+                      }}>
+                      {paymentData.status === 'paid' ? 'Completed' : paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span 
-                    className={`px-4 py-2 rounded-xl text-sm ${
-                      child.status === 'paid' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                    style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
-                  >
-                    {child.status === 'paid' ? 'Paid' : 'Outstanding'}
-                  </span>
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -2535,44 +2565,34 @@ function StaffFeesScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffS
 }
 
 // Staff Add Fee Screen
-function StaffAddFeeScreen({ onNavigate, onLogout }: { onNavigate: (screen: StaffScreen) => void; onLogout?: () => void }) {
+function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPayments, events }: { onNavigate: (screen: StaffScreen) => void; onLogout?: () => void; childrenList: Child[]; payments: any[]; setPayments?: (payments: any[]) => void; events: any[] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [feeType, setFeeType] = useState<'tuition' | 'event'>('event');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [status, setStatus] = useState<'outstanding' | 'pending' | 'completed'>('outstanding');
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
-
-  const allChildren = [
-    'Noah Bennett',
-    'Lucas Carter',
-    'Ava Martinez',
-    'Alex James',
-    'Amy James',
-    'Rob James',
-    'Sofia Patel',
-    'Emma Parker',
-    'Liam Thompson'
-  ];
 
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
 
-  const handleChildSelection = (child: string, checked: boolean) => {
+  const handleChildSelection = (childId: string, checked: boolean) => {
     if (checked) {
-      setSelectedChildren([...selectedChildren, child]);
+      setSelectedChildren([...selectedChildren, childId]);
     } else {
-      setSelectedChildren(selectedChildren.filter(c => c !== child));
+      setSelectedChildren(selectedChildren.filter(c => c !== childId));
     }
   };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedChildren([...allChildren]);
+      setSelectedChildren(childrenList.map(c => c.childId));
     } else {
       setSelectedChildren([]);
     }
   };
 
-  const allChildrenSelected = selectedChildren.length === allChildren.length;
+  const allChildrenSelected = selectedChildren.length === childrenList.length;
   const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
 
   const handleSubmit = () => {
@@ -2584,7 +2604,37 @@ function StaffAddFeeScreen({ onNavigate, onLogout }: { onNavigate: (screen: Staf
       alert('Please enter a valid amount');
       return;
     }
-    
+    if (!description.trim()) {
+      alert('Please enter a description');
+      return;
+    }
+    if (feeType === 'event' && !selectedEventId) {
+      alert('Please select an event');
+      return;
+    }
+
+    // Create new payment records for each selected child
+    if (typeof setPayments === 'function') {
+      setPayments((prevPayments: any[]) => {
+        const maxId = prevPayments.reduce((max, p) => {
+          const m = p.paymentId && p.paymentId.toString().startsWith('p') ? parseInt(p.paymentId.toString().slice(1)) : 0;
+          return Math.max(max, isNaN(m) ? 0 : m);
+        }, 0);
+        let nextId = maxId + 1;
+
+        const newPayments = selectedChildren.map((childId: string) => ({
+          paymentId: `p${nextId++}`,
+          childId,
+          amount: parseFloat(amount),
+          description,
+          status,
+          eventId: feeType === 'event' ? selectedEventId : null
+        }));
+
+        return prevPayments.concat(newPayments);
+      });
+    }
+
     alert(`Fee of $${amount} added to ${selectedChildren.length} child(ren)`);
     onNavigate('staff-fees');
   };
@@ -2681,6 +2731,42 @@ function StaffAddFeeScreen({ onNavigate, onLogout }: { onNavigate: (screen: Staf
             />
           </div>
 
+          {feeType === 'event' && (
+            <div className="space-y-2">
+              <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                Select Event
+              </label>
+              <select
+                value={selectedEventId || ''}
+                onChange={(e) => setSelectedEventId(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+              >
+                <option value="">-- Select an event --</option>
+                {events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Status */}
+          <div className="space-y-2">
+            <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as 'outstanding' | 'pending' | 'completed')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+            >
+              <option value="outstanding">Outstanding</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
           {/* Description */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
@@ -2742,7 +2828,7 @@ function StaffAddFeeScreen({ onNavigate, onLogout }: { onNavigate: (screen: Staf
                           onChange={(e) => handleChildSelection(child, e.target.checked)}
                           className="w-5 h-5 rounded border-gray-300"
                         />
-                        <span>{child}</span>
+                        <span>{childrenList.find(c => c.childId === child)?.name || child}</span>
                       </label>
                     </div>
                   ))}
@@ -2796,29 +2882,13 @@ function StaffAddFeeScreen({ onNavigate, onLogout }: { onNavigate: (screen: Staf
 }
 
 // Main Staff App Component
-export default function StaffApp({ onLogout }: { onLogout?: () => void }) {
+export default function StaffApp({ onLogout, childrenList, events, setEvents, forms, setForms, payments, setPayments }: { onLogout?: () => void; childrenList: Child[]; events: any[]; setEvents: (events: any[]) => void; forms: any[]; setForms?: (forms: any[]) => void; payments: any[]; setPayments?: (payments: any[]) => void }) {
   const [currentScreen, setCurrentScreen] = useState<StaffScreen>('staff-home');
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [attendance, setAttendance] = useState({
-    'Noah Bennett': true,
-    'Lucas Carter': true,
-    'Ava Martinez': true,
-    'Alex James': true,
-    'Amy James': true,
-    'Rob James': true,
-    'Sofia Patel': true,
-    'Emma Parker': true,
-    'Liam Thompson': true,
-  });
+  const [attendance, setAttendance] = useState(
+    Object.fromEntries(childrenList.map(c => [c.childId, false])) as { [key: string]: boolean }
+  );
 
-  // All events state (not filtered by child)
-  const [events, setEvents] = useState([
-    { id: 1, title: 'Drumheller Field Trip', date: new Date(2025, 10, 7) },
-    { id: 2, title: 'Calgary Zoo Visit', date: new Date(2025, 10, 14) },
-    { id: 3, title: 'Telus Spark Science Center', date: new Date(2025, 10, 21) },
-    { id: 4, title: 'Holiday Concert', date: new Date(2025, 11, 15) },
-    { id: 5, title: 'Winter Party', date: new Date(2025, 11, 20) },
-  ]);
 
   // Activity logs state
   const [logs, setLogs] = useState([
@@ -2909,9 +2979,90 @@ export default function StaffApp({ onLogout }: { onLogout?: () => void }) {
   const addEvent = (eventData: any) => {
     const newEvent = {
       id: events.length + 1,
-      ...eventData
+      ...eventData,
+      hasForm: eventData.hasForm ?? false
     };
-    setEvents([...events, newEvent].sort((a, b) => a.date.getTime() - b.date.getTime()));
+    setEvents((prev: any[]) => {
+      const next = [...prev, newEvent].sort((a, b) => a.date.getTime() - b.date.getTime());
+      return next;
+    });
+
+    // create forms for the children of the new event only if event.hasForm is true and setter provided
+    if (typeof setForms === 'function' && newEvent.hasForm && Array.isArray(newEvent.children) && newEvent.children.length > 0) {
+      setForms((prevForms: any[]) => {
+        const maxId = prevForms.reduce((max, f) => {
+          const m = f.id && f.id.toString().startsWith('f') ? parseInt(f.id.toString().slice(1)) : 0;
+          return Math.max(max, isNaN(m) ? 0 : m);
+        }, 0);
+        let nextId = maxId + 1;
+        const newForms = newEvent.children.map((childId: string) => ({
+          id: `f${nextId++}`,
+          title: `${newEvent.title} Permission Form`,
+          eventId: newEvent.id,
+          childId,
+          dueDate: newEvent.date || new Date(),
+          status: 'outstanding',
+        }));
+        return prevForms.concat(newForms);
+      });
+    }
+  };
+
+  const updateEvent = (updatedEvent: any) => {
+    // capture previous event for computing diffs
+    const prevEvent = events.find((e) => e.id === updatedEvent.id);
+
+    // preserve hasForm if not explicitly provided in update
+    const eventToSave = {
+      ...updatedEvent,
+      hasForm: updatedEvent.hasForm !== undefined ? updatedEvent.hasForm : prevEvent?.hasForm ?? false
+    };
+
+    setEvents(prev => {
+      const merged = prev.map(e => e.id === updatedEvent.id ? { ...e, ...eventToSave } : e);
+      return merged.sort((a, b) => a.date.getTime() - b.date.getTime());
+    });
+    setSelectedEvent(eventToSave);
+
+    // synchronize forms when children list changes (only if event.hasForm is true)
+    if (typeof setForms === 'function' && prevEvent && eventToSave.hasForm) {
+      const prevChildren: string[] = prevEvent.children || [];
+      const newChildren: string[] = eventToSave.children || [];
+
+      const added = newChildren.filter((c) => !prevChildren.includes(c));
+      const removed = prevChildren.filter((c) => !newChildren.includes(c));
+
+      setForms((prevForms: any[]) => {
+        let nextForms = [...prevForms];
+
+        // remove forms for removed children for this event
+        if (removed.length > 0) {
+          nextForms = nextForms.filter((f) => !(f.eventId === updatedEvent.id && removed.includes(f.childId)));
+        }
+
+        // add forms for newly added children
+        if (added.length > 0) {
+          const maxId = nextForms.reduce((max, f) => {
+            const m = f.id && f.id.toString().startsWith('f') ? parseInt(f.id.toString().slice(1)) : 0;
+            return Math.max(max, isNaN(m) ? 0 : m);
+          }, 0);
+          let nextId = maxId + 1;
+
+          const newForms = added.map((childId) => ({
+            id: `f${nextId++}`,
+            title: `${eventToSave.title} Permission Form`,
+            eventId: updatedEvent.id,
+            childId,
+            dueDate: eventToSave.date || new Date(),
+            status: 'outstanding',
+          }));
+
+          nextForms = nextForms.concat(newForms);
+        }
+
+        return nextForms;
+      });
+    }
   };
 
   const navigate = (screen: StaffScreen, data?: any) => {
@@ -2925,31 +3076,31 @@ export default function StaffApp({ onLogout }: { onLogout?: () => void }) {
       case 'staff-home':
         return <StaffHomeScreen onNavigate={navigate} events={events} onLogout={onLogout} />;
       case 'staff-log':
-        return <StaffLogScreen onNavigate={navigate} onAddLog={addLog} onLogout={onLogout} />;
+        return <StaffLogScreen onNavigate={navigate} onAddLog={addLog} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-class-list':
-        return <StaffClassListScreen onNavigate={navigate} attendance={attendance} onLogout={onLogout} />;
+        return <StaffClassListScreen onNavigate={navigate} attendance={attendance} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-attendance':
-        return <StaffAttendanceScreen onNavigate={navigate} attendance={attendance} setAttendance={setAttendance} onLogout={onLogout} />;
+        return <StaffAttendanceScreen onNavigate={navigate} attendance={attendance} setAttendance={setAttendance} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-events':
         return <StaffEventsScreen events={events} onNavigate={navigate} onLogout={onLogout} />;
       case 'staff-event-details':
-        return <StaffEventDetailsScreen event={selectedEvent} onNavigate={navigate} onLogout={onLogout} />;
+        return <StaffEventDetailsScreen event={selectedEvent} onNavigate={navigate} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-add-event':
-        return <StaffAddEditEventScreen onNavigate={navigate} mode="add" onAddEvent={addEvent} onLogout={onLogout} />;
+        return <StaffAddEditEventScreen onNavigate={navigate} mode="add" onAddEvent={addEvent} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-edit-event':
-        return <StaffAddEditEventScreen event={selectedEvent} onNavigate={navigate} mode="edit" onAddEvent={addEvent} onLogout={onLogout} />;
+        return <StaffAddEditEventScreen event={selectedEvent} onNavigate={navigate} mode="edit" onAddEvent={addEvent} onUpdateEvent={updateEvent} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-view-logs':
         return <StaffViewLogsScreen onNavigate={navigate} logs={logs} onLogout={onLogout} />;
       case 'staff-edit-log':
-        return <StaffEditLogScreen onNavigate={navigate} log={selectedLog} onLogout={onLogout} />;
+        return <StaffEditLogScreen onNavigate={navigate} log={selectedLog} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-forms':
-        return <StaffFormsScreen onNavigate={navigate} onLogout={onLogout} />;
+        return <StaffFormsScreen onNavigate={navigate} onLogout={onLogout} forms={forms} childrenList={childrenList} />;
       case 'staff-form-detail':
         return <StaffFormDetailScreen form={selectedEvent} onNavigate={navigate} onLogout={onLogout} />;
       case 'staff-fees':
-        return <StaffFeesScreen onNavigate={navigate} onLogout={onLogout} />;
+        return <StaffFeesScreen onNavigate={navigate} onLogout={onLogout} payments={payments} childrenList={childrenList} />;
       case 'staff-add-fee':
-        return <StaffAddFeeScreen onNavigate={navigate} onLogout={onLogout} />;
+        return <StaffAddFeeScreen onNavigate={navigate} onLogout={onLogout} childrenList={childrenList} payments={payments} setPayments={setPayments} events={events} />;
       default:
         return <StaffHomeScreen onNavigate={navigate} events={events} onLogout={onLogout} />;
     }
