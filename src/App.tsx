@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, Bell, FileText, CreditCard, Home, Menu, X, ChevronRight, ChevronDown, Download } from 'lucide-react';
 import Icon from './imports/Icon';
 import BackButton from './imports/BackButton';
@@ -55,9 +55,29 @@ export default function App() {
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [selectedForm, setSelectedForm] = useState<any>(null);
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
+  const [loggedInParentId, setLoggedInParentId] = useState<string | null>(null);
+
+  // Parent accounts - one per parentId
+  const parentAccounts = [
+    { parentId: 'p1', email: 'parent1@example.com', password: 'password1' },
+    { parentId: 'p2', email: 'parent2@example.com', password: 'password2' },
+    { parentId: 'p3', email: 'parent3@example.com', password: 'password3' },
+    { parentId: 'p4', email: 'parent4@example.com', password: 'password4' },
+    { parentId: 'p5', email: 'parent5@example.com', password: 'password5' },
+    { parentId: 'p6', email: 'parent6@example.com', password: 'password6' },
+  ];
 
   const handleStaffLogout = () => {
     setAppMode('parent');
+    setCurrentScreen('landing');
+  };
+
+  const handleParentLogin = (parentId: string) => {
+    setLoggedInParentId(parentId);
+  };
+
+  const handleParentLogout = () => {
+    setLoggedInParentId(null);
     setCurrentScreen('landing');
   };
 
@@ -259,57 +279,69 @@ export default function App() {
 
   
 
-  const activities = [
-    { 
-      id: 1, 
-      date: 'Nov 3', 
-      title: 'Morning Activities', 
-      child: 'Rob', 
-      timeStart: '9:00 AM',
-      timeEnd: '10:30 AM',
-      notes: 'Rob had a great time building with blocks and listening to stories about dinosaurs.',
-      behavioralNotes: 'Rob shared well with others and followed instructions during activities.'
-    },
-    { 
-      id: 2, 
-      date: 'Nov 2', 
-      title: 'Afternoon Snack', 
-      child: 'Rob', 
-      timeStart: '2:30 PM',
-      timeEnd: '3:00 PM',
-      notes: 'Rob ate well and asked for seconds!',
-      behavioralNotes: 'Rob used good manners and cleaned up after himself.'
-    },
-    { 
-      id: 3, 
-      date: 'Nov 1', 
-      title: 'Outdoor Play', 
-      child: 'Rob', 
-      timeStart: '10:30 AM',
-      timeEnd: '11:30 AM',
-      notes: 'Rob enjoyed the slide and playing with friends.',
-      behavioralNotes: 'Rob took turns on equipment and was kind to classmates.'
-    },
-  ];
+  // Activities/logs state - shared between parent and staff views
+  const [activities, setActivities] = useState<any[]>([]);
+  React.useEffect(() => {
+    if (activities.length === 0) {
+      setActivities([
+        { 
+          id: 1, 
+          activityName: 'Nap Time', 
+          startTime: '12:00pm', 
+          endTime: '1:00pm',
+          startHour: '12',
+          startMinute: '00',
+          startPeriod: 'PM',
+          endHour: '01',
+          endMinute: '00',
+          endPeriod: 'PM',
+          notes: 'All children rested well',
+          children: [
+            { childId: 'c6', name: 'Rob James', selected: true, behavioralNote: 'Woke up after 30 minutes' },
+            { childId: 'c8', name: 'Emma Parker', selected: true, behavioralNote: 'Very calm and relaxed' },
+            { childId: 'c9', name: 'Liam Thompson', selected: true, behavioralNote: '' },
+          ]
+        },
+        { 
+          id: 2, 
+          activityName: 'Lunch', 
+          startTime: '11:00am', 
+          endTime: '12:00pm',
+          startHour: '11',
+          startMinute: '00',
+          startPeriod: 'AM',
+          endHour: '12',
+          endMinute: '00',
+          endPeriod: 'PM',
+          notes: 'Served pasta and vegetables',
+          children: [
+            { childId: 'c6', name: 'Rob James', selected: true, behavioralNote: 'Good table manners' },
+            { childId: 'c8', name: 'Emma Parker', selected: true, behavioralNote: '' },
+            { childId: 'c9', name: 'Liam Thompson', selected: true, behavioralNote: 'Spilled water but cleaned up nicely' },
+          ]
+        },
+      ]);
+    }
+  }, [activities.length]);
 
   const [allForms, setAllForms] = useState([
-    // Event-linked forms
-    { id: 'f1', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c1', dueDate: new Date('2025-11-05'), status: 'outstanding' },
-    { id: 'f2', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c3', dueDate: new Date('2025-11-05'), status: 'pending' },
-    { id: 'f3', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c6', dueDate: new Date('2025-11-05'), status: 'completed' },
-    { id: 'f4', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c2', dueDate: new Date('2025-11-12'), status: 'outstanding' },
-    { id: 'f5', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c4', dueDate: new Date('2025-11-12'), status: 'pending' },
-    { id: 'f6', title: 'Telus Spark Science Center Permission Form', eventId: 3, childId: 'c5', dueDate: new Date('2025-11-19'), status: 'outstanding' },
-    { id: 'f7', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c6', dueDate: new Date('2025-12-01'), status: 'pending' },
-    { id: 'f8', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c7', dueDate: new Date('2025-12-01'), status: 'completed' },
-    { id: 'f9', title: 'Winter Party Permission Form', eventId: 5, childId: 'c1', dueDate: new Date('2025-12-15'), status: 'outstanding' },
-    { id: 'f10', title: 'Winter Party Permission Form', eventId: 5, childId: 'c2', dueDate: new Date('2025-12-15'), status: 'pending' },
-    { id: 'f11', title: 'Winter Party Permission Form', eventId: 5, childId: 'c3', dueDate: new Date('2025-12-15'), status: 'completed' },
-    { id: 'f12', title: 'Winter Party Permission Form', eventId: 5, childId: 'c4', dueDate: new Date('2025-12-15'), status: 'pending' },
-    { id: 'f13', title: 'Calgary Zoo Field Trip Permission Form', eventId: 6, childId: 'c6', dueDate: new Date('2025-12-10'), status: 'outstanding' },
-    { id: 'f14', title: 'Telus Spark Field Trip Permission Form', eventId: 7, childId: 'c6', dueDate: new Date('2025-12-23'), status: 'pending' },
-    { id: 'f15', title: 'Science Fair Permission Form', eventId: 8, childId: 'c8', dueDate: new Date('2025-11-10'), status: 'completed' },
-    { id: 'f16', title: 'Art Gallery Visit Permission Form', eventId: 9, childId: 'c8', dueDate: new Date('2025-11-28'), status: 'outstanding' },
+    // Event-linked forms (include parent fields for staff view)
+    { id: 'f1', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c1', dueDate: new Date('2025-11-05'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f2', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c3', dueDate: new Date('2025-11-05'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f3', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c6', dueDate: new Date('2025-11-05'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f4', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c2', dueDate: new Date('2025-11-12'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f5', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c4', dueDate: new Date('2025-11-12'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f6', title: 'Telus Spark Science Center Permission Form', eventId: 3, childId: 'c5', dueDate: new Date('2025-11-19'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f7', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c6', dueDate: new Date('2025-12-01'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f8', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c7', dueDate: new Date('2025-12-01'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f9', title: 'Winter Party Permission Form', eventId: 5, childId: 'c1', dueDate: new Date('2025-12-15'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f10', title: 'Winter Party Permission Form', eventId: 5, childId: 'c2', dueDate: new Date('2025-12-15'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f11', title: 'Winter Party Permission Form', eventId: 5, childId: 'c3', dueDate: new Date('2025-12-15'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f12', title: 'Winter Party Permission Form', eventId: 5, childId: 'c4', dueDate: new Date('2025-12-15'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f13', title: 'Calgary Zoo Field Trip Permission Form', eventId: 6, childId: 'c6', dueDate: new Date('2025-12-10'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f14', title: 'Telus Spark Field Trip Permission Form', eventId: 7, childId: 'c6', dueDate: new Date('2025-12-23'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f15', title: 'Science Fair Permission Form', eventId: 8, childId: 'c8', dueDate: new Date('2025-11-10'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f16', title: 'Art Gallery Visit Permission Form', eventId: 9, childId: 'c8', dueDate: new Date('2025-11-28'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
   ]);
 
 
@@ -374,7 +406,7 @@ export default function App() {
       case 'landing':
         return <LandingScreen onNavigate={navigate} onStaffMode={() => navigate('staff-login')} />;
       case 'login':
-        return <LoginScreen onNavigate={navigate} />;
+        return <LoginScreen onNavigate={navigate} parentAccounts={parentAccounts} onLogin={handleParentLogin} />;
       case 'register':
         return <RegisterScreen onNavigate={navigate} />;
       case 'forgot-password':
@@ -382,23 +414,23 @@ export default function App() {
       case 'staff-login':
         return <StaffLoginScreen onNavigate={navigate} onStaffLogin={() => setAppMode('staff')} />;
       case 'home':
-        return <HomeScreen onNavigate={navigate} events={events} children={children} />;
+        return <HomeScreen onNavigate={navigate} events={events} children={children} loggedInParentId={loggedInParentId} onLogout={handleParentLogout} />;
       case 'events':
-        return <EventsScreen events={events} children={children} onNavigate={navigate} />;
+        return <EventsScreen events={events} children={children} onNavigate={navigate} loggedInParentId={loggedInParentId} onLogout={handleParentLogout} />;
       case 'event-details':
         return <EventDetailsScreen event={selectedEvent} forms={forms} payments={payments} selectedChild={selectedChild} children={children} onNavigate={navigate} />
       case 'my-children':
-        return <MyChildrenScreen onNavigate={navigate} />;
+        return <MyChildrenScreen onNavigate={navigate} childrenList={children} loggedInParentId={loggedInParentId} onLogout={handleParentLogout} />;
       case 'daily-activity':
-        return <DailyActivityScreen activities={activities} selectedChild={selectedChild} onNavigate={navigate} />;
+        return <DailyActivityScreen activities={activities} selectedChild={selectedChild} onNavigate={navigate} children={children} />;
       case 'activity-details':
         return <ActivityDetailsScreen activity={selectedActivity} onNavigate={navigate} />;
       case 'forms':
-        return <FormsScreen forms={forms} children={children} onNavigate={navigate} />;
+        return <FormsScreen forms={forms} children={children} onNavigate={navigate} loggedInParentId={loggedInParentId} onLogout={handleParentLogout} />;
       case 'form-view':
         return <FormViewScreen form={selectedForm} onNavigate={navigate} allForms={allForms} setAllForms={setAllForms} />;
       case 'payments':
-        return <PaymentsScreen onNavigate={navigate} payments={payments} children={children} allPayments={allPayments} setAllPayments={setAllPayments} />;
+        return <PaymentsScreen onNavigate={navigate} payments={payments} children={children} allPayments={allPayments} setAllPayments={setAllPayments} loggedInParentId={loggedInParentId} onLogout={handleParentLogout} selectedPaymentFromNav={selectedPayment} />;
       default:
         return <LandingScreen onNavigate={navigate} />;
     }
@@ -406,7 +438,7 @@ export default function App() {
 
   // If in staff mode, render StaffApp and pass canonical children list
   if (appMode === 'staff') {
-    return <StaffApp onLogout={handleStaffLogout} childrenList={children} events={events} setEvents={setEvents} forms={forms} setForms={setAllForms} payments={payments} setPayments={setAllPayments} />;
+    return <StaffApp onLogout={handleStaffLogout} childrenList={children} events={events} setEvents={setEvents} forms={forms} setForms={setAllForms} payments={payments} setPayments={setAllPayments} activities={activities} setActivities={setActivities} />;
   }
 
   return (
@@ -466,8 +498,22 @@ function LandingScreen({ onNavigate, onStaffMode }: { onNavigate: (screen: Scree
 }
 
 // Login Screen
-function LoginScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }) {
+function LoginScreen({ onNavigate, parentAccounts, onLogin }: { onNavigate: (screen: Screen) => void; parentAccounts: any[]; onLogin: (parentId: string) => void }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    setError('');
+    const account = parentAccounts.find(acc => acc.email === email && acc.password === password);
+    if (account) {
+      onLogin(account.parentId);
+      onNavigate('home');
+    } else {
+      setError('Invalid email or password');
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -499,10 +545,18 @@ function LoginScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }) {
         </h2>
 
         <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Email</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="your.email@example.com"
             />
@@ -512,6 +566,9 @@ function LoginScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }) {
             <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Password</label>
             <input
               type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="••••••••"
             />
@@ -536,7 +593,7 @@ function LoginScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }) {
           </div>
 
           <button
-            onClick={() => onNavigate('home')}
+            onClick={handleLogin}
             className="w-full bg-[#191d21] hover:bg-[#2a2e32] text-white py-4 px-6 rounded-lg transition-all shadow-lg"
             style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '22px' }}
           >
@@ -800,9 +857,12 @@ function ForgotPasswordScreen({ onNavigate }: { onNavigate: (screen: Screen) => 
 }
 
 // Home Screen
-function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Screen, data?: any) => void; events: any[]; children: any[] }) {
+function HomeScreen({ onNavigate, events, children, loggedInParentId, onLogout }: { onNavigate: (screen: Screen, data?: any) => void; events: any[]; children: any[]; loggedInParentId: string | null; onLogout: () => void }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showMenu, setShowMenu] = useState(false);
+
+  // Filter children by logged-in parent
+  const myChildren = loggedInParentId ? children.filter(child => child.parentId === loggedInParentId) : [];
 
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
@@ -834,7 +894,7 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
               {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
             <button 
-              onClick={() => onNavigate('landing')}
+              onClick={onLogout}
               className="hidden md:block text-gray-600 hover:text-gray-900"
             >
               Logout
@@ -843,7 +903,7 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
 
           {showMenu && (
             <div className="md:hidden mt-4 space-y-2">
-              <button onClick={() => onNavigate('landing')} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
                 Logout
               </button>
             </div>
@@ -923,7 +983,7 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
             <p className="text-gray-500 text-center py-8">No events scheduled for this month</p>
           ) : (
             <div className="space-y-6">
-              {children.map(child => {
+              {myChildren.map(child => {
                 const childEvents = eventsInMonth.filter((event: any) => event.children && event.children.includes(child.childId));
                 if (childEvents.length === 0) return null;
                 
@@ -989,8 +1049,11 @@ function HomeScreen({ onNavigate, events, children }: { onNavigate: (screen: Scr
 }
 
 // Events Screen
-function EventsScreen({ events, children, onNavigate }: { events: any[]; children: any[]; onNavigate: (screen: Screen, data?: any) => void }) {
+function EventsScreen({ events, children, onNavigate, loggedInParentId, onLogout }: { events: any[]; children: any[]; onNavigate: (screen: Screen, data?: any) => void; loggedInParentId: string | null; onLogout: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
+
+  // Filter children by logged-in parent
+  const myChildren = loggedInParentId ? children.filter(child => child.parentId === loggedInParentId) : [];
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -1005,7 +1068,7 @@ function EventsScreen({ events, children, onNavigate }: { events: any[]; childre
 
           {showMenu && (
             <div className="mb-4 space-y-2">
-              <button onClick={() => onNavigate('landing')} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
                 Logout
               </button>
             </div>
@@ -1031,15 +1094,15 @@ function EventsScreen({ events, children, onNavigate }: { events: any[]; childre
       </div>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <Tabs defaultValue={children[0]?.name} className="w-full">
-          <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${children.length}, minmax(0, 1fr))` }}>
-            {children.map((child) => (
+        <Tabs defaultValue={myChildren[0]?.name} className="w-full">
+          <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${myChildren.length}, minmax(0, 1fr))` }}>
+            {myChildren.map((child) => (
               <TabsTrigger key={child.childId} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
                 {child.name}
               </TabsTrigger>
             ))}
           </TabsList>
-          {children.map((child) => (
+          {myChildren.map((child) => (
             <TabsContent key={child.childId} value={child.name}>
               <div className="space-y-4">
                 {events.filter((event: any) => event.children && event.children.includes(child.childId)).map(event => (
@@ -1092,9 +1155,9 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
     form.eventId === event.id && form.childId === child.childId && form.status === 'outstanding'
   ) : null;
 
-  // Find the corresponding payment for this event
-  const eventPayment = event ? payments.find(payment => 
-    payment.name.toLowerCase().includes(event.title.toLowerCase().split(' ')[0]) // Match by first word (Drumheller, Calgary, Telus)
+  // Find the corresponding payment for this event and child with outstanding status
+  const eventPayment = event && child ? payments.find((payment: any) => 
+    payment.eventId === event.id && payment.childId === child.childId && payment.status === 'outstanding'
   ) : null;
 
   return (
@@ -1201,13 +1264,15 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
                 Form
               </button>
             )}
-            <button
-              onClick={() => eventPayment ? onNavigate('payments', eventPayment) : onNavigate('payments')}
-              className="bg-[#009951] hover:bg-[#007a40] text-white rounded-xl transition-all flex items-center justify-center"
-              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
-            >
-              Pay Now
-            </button>
+            {eventPayment && (
+              <button
+                onClick={() => onNavigate('payments', eventPayment)}
+                className="bg-[#009951] hover:bg-[#007a40] text-white rounded-xl transition-all flex items-center justify-center"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
+              >
+                Pay Now
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1216,14 +1281,13 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
 }
 
 // My Children Screen
-function MyChildrenScreen({ onNavigate }: { onNavigate: (screen: Screen, data?: any) => void }) {
+function MyChildrenScreen({ onNavigate, childrenList, loggedInParentId, onLogout }: { onNavigate: (screen: Screen, data?: any) => void; childrenList: any[]; loggedInParentId: string | null; onLogout: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
   
-  const children = [
-    { id: 1, name: 'Rob', age: 4, classroom: 'Sunflowers', newLogs: 3 },
-    { id: 2, name: 'Emma', age: 3, classroom: 'Butterflies', newLogs: 0 },
-    { id: 3, name: 'Liam', age: 5, classroom: 'Rainbows', newLogs: 1 },
-  ];
+  // Filter children by logged-in parent's parentId
+  const children = loggedInParentId 
+    ? childrenList.filter(child => child.parentId === loggedInParentId)
+    : [];
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -1238,7 +1302,7 @@ function MyChildrenScreen({ onNavigate }: { onNavigate: (screen: Screen, data?: 
 
           {showMenu && (
             <div className="mb-4 space-y-2">
-              <button onClick={() => onNavigate('landing')} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
                 Logout
               </button>
             </div>
@@ -1269,19 +1333,14 @@ function MyChildrenScreen({ onNavigate }: { onNavigate: (screen: Screen, data?: 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {children.map(child => (
             <div 
-              key={child.id} 
-              onClick={() => onNavigate('daily-activity', child.name)}
+              key={child.childId} 
+              onClick={() => onNavigate('daily-activity', child.childId)}
               className="bg-gradient-to-br from-[#155323] to-[#0d3a18] text-white rounded-3xl p-8 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">
                     👶
-                    {child.newLogs > 0 && (
-                      <div className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center text-white text-sm" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700 }}>
-                        {child.newLogs}
-                      </div>
-                    )}
                   </div>
                   <h2 className="text-3xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700 }}>
                     {child.name}
@@ -1300,8 +1359,22 @@ function MyChildrenScreen({ onNavigate }: { onNavigate: (screen: Screen, data?: 
 }
 
 // Daily Activity Screen
-function DailyActivityScreen({ activities, selectedChild, onNavigate }: { activities: any[]; selectedChild: string; onNavigate: (screen: Screen, data?: any) => void }) {
+function DailyActivityScreen({ activities, selectedChild, onNavigate, children }: { activities: any[]; selectedChild: string; onNavigate: (screen: Screen, data?: any) => void; children: any[] }) {
   const [showMenu, setShowMenu] = useState(false);
+
+  // Look up the child's name
+  const child = children.find(c => c.childId === selectedChild);
+  const childName = child?.name || 'Child';
+
+  // Filter activities where the selected child participated (selectedChild is now childId)
+  const childActivities = (Array.isArray(activities) ? activities : []).filter((a: any) =>
+    Array.isArray(a.children) && a.children.some((c: any) => c.childId === selectedChild && c.selected)
+  );
+
+  const getBehavioralNote = (a: any) => {
+    const entry = Array.isArray(a.children) ? a.children.find((c: any) => c.childId === selectedChild) : null;
+    return entry?.behavioralNote || '';
+  };
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -1339,24 +1412,26 @@ function DailyActivityScreen({ activities, selectedChild, onNavigate }: { activi
             <div className="col-span-2"></div>
           </div>
           
-          <p className="text-gray-600 mt-4 text-center">Viewing activities for {selectedChild}</p>
+          <p className="text-gray-600 mt-4 text-center">Viewing activities for {childName}</p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <Accordion type="single" collapsible className="space-y-4">
-          {activities.map((activity, index) => (
+        {childActivities.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">There are no activities for {childName}</p>
+          </div>
+        ) : (
+          <Accordion type="single" collapsible className="space-y-4">
+          {childActivities.map((activity: any) => (
             <AccordionItem key={activity.id} value={`item-${activity.id}`} className="bg-[#f2f3f7] rounded-2xl border-none">
               <AccordionTrigger className="px-6 py-4 hover:no-underline">
                 <div className="flex justify-between items-start w-full pr-4">
                   <div className="text-left">
-                    <div className="inline-block bg-[#BF6A02] text-white px-3 py-1 rounded-full text-sm mb-2">
-                      {activity.date}
-                    </div>
                     <h3 className="text-lg" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
-                      {activity.title}
+                      {activity.activityName}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">{activity.timeStart} - {activity.timeEnd}</p>
+                    <p className="text-sm text-gray-600 mt-1">{activity.startTime} - {activity.endTime}</p>
                   </div>
                 </div>
               </AccordionTrigger>
@@ -1368,13 +1443,14 @@ function DailyActivityScreen({ activities, selectedChild, onNavigate }: { activi
                   </div>
                   <div className="bg-white rounded-xl p-4">
                     <h4 className="text-base mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Behavioral Notes</h4>
-                    <p className="text-gray-700">{activity.behavioralNotes}</p>
+                    <p className="text-gray-700">{getBehavioralNote(activity) || 'None'}</p>
                   </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
+        )}
       </div>
 
       <BottomNav current="activity" onNavigate={onNavigate} />
@@ -1439,8 +1515,11 @@ function ActivityDetailsScreen({ activity, onNavigate }: { activity: any; onNavi
 }
 
 // Forms Screen
-function FormsScreen({ forms, children, onNavigate }: { forms: any[]; children: any[]; onNavigate: (screen: Screen, data?: any) => void }) {
+function FormsScreen({ forms, children, onNavigate, loggedInParentId, onLogout }: { forms: any[]; children: any[]; onNavigate: (screen: Screen, data?: any) => void; loggedInParentId: string | null; onLogout: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
+
+  // Filter children by logged-in parent
+  const myChildren = loggedInParentId ? children.filter(child => child.parentId === loggedInParentId) : [];
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -1455,7 +1534,7 @@ function FormsScreen({ forms, children, onNavigate }: { forms: any[]; children: 
 
           {showMenu && (
             <div className="mb-4 space-y-2">
-              <button onClick={() => onNavigate('landing')} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
                 Logout
               </button>
             </div>
@@ -1481,15 +1560,15 @@ function FormsScreen({ forms, children, onNavigate }: { forms: any[]; children: 
       </div>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <Tabs defaultValue={children[0]?.name} className="w-full">
-          <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${children.length}, minmax(0, 1fr))` }}>
-            {children.map((child) => (
+        <Tabs defaultValue={myChildren[0]?.name} className="w-full">
+          <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${myChildren.length}, minmax(0, 1fr))` }}>
+            {myChildren.map((child) => (
               <TabsTrigger key={child.childId} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
                 {child.name}
               </TabsTrigger>
             ))}
           </TabsList>
-          {children.map((child) => (
+          {myChildren.map((child) => (
             <TabsContent key={child.childId} value={child.name}>
               <div className="space-y-4">
                 {forms.filter(form => form.childId === child.childId).map(form => (
@@ -1545,6 +1624,17 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
   const [isConsentChecked, setIsConsentChecked] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const signatureRef = useRef<SignatureCanvas>(null);
+  const [parentName, setParentName] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (form) {
+      setParentName(form.parentName ?? '');
+      setEmergencyContact(form.emergencyContact ?? '');
+      setNotes(form.notes ?? '');
+    }
+  }, [form]);
 
   const handleClearSignature = () => {
     signatureRef.current?.clear();
@@ -1620,19 +1710,10 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
               </label>
               <input
                 type="text"
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                 placeholder="Your name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                Contact Number
-              </label>
-              <input
-                type="tel"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
-                placeholder="(555) 555-5555"
               />
             </div>
 
@@ -1642,6 +1723,8 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
               </label>
               <input
                 type="tel"
+                value={emergencyContact}
+                onChange={(e) => setEmergencyContact(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                 placeholder="(555) 555-5555"
               />
@@ -1705,12 +1788,16 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
                 I consent to the information provided and understand the terms and conditions.
               </label>
             </div>
-
             <button
               onClick={() => {
-                // Update form status to pending
+                // Capture signature as data URL (if present)
+                const signatureData = signatureRef.current && !signatureRef.current.isEmpty()
+                  ? signatureRef.current.getTrimmedCanvas().toDataURL('image/png')
+                  : '';
+
+                // Update form with parent fields and set status to pending
                 const updatedForms = allForms.map(f => 
-                  f.id === form.id ? { ...f, status: 'pending' } : f
+                  f.id === form.id ? { ...f, status: 'pending', parentName, emergencyContact, notes, signature: signatureData } : f
                 );
                 setAllForms(updatedForms);
                 onNavigate('forms');
@@ -1728,10 +1815,21 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
 }
 
 // Payments Screen
-function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPayments }: { onNavigate: (screen: Screen, data?: any) => void; payments: any[]; children: any[]; allPayments: any[]; setAllPayments: (payments: any[]) => void }) {
+function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPayments, loggedInParentId, onLogout, selectedPaymentFromNav }: { onNavigate: (screen: Screen, data?: any) => void; payments: any[]; children: any[]; allPayments: any[]; setAllPayments: (payments: any[]) => void; loggedInParentId: string | null; onLogout: () => void; selectedPaymentFromNav?: any }) {
   const [step, setStep] = useState(1);
+    // Auto-navigate to step 2 if a payment was passed via navigation
+    useEffect(() => {
+      if (selectedPaymentFromNav) {
+        setSelectedPayment(selectedPaymentFromNav);
+        setStep(2);
+      }
+    }, [selectedPaymentFromNav]);
+
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [showMenu, setShowMenu] = useState(false);
+
+  // Filter children by logged-in parent
+  const myChildren = loggedInParentId ? children.filter(child => child.parentId === loggedInParentId) : [];
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -1746,7 +1844,7 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
 
           {showMenu && (
             <div className="mb-4 space-y-2">
-              <button onClick={() => onNavigate('landing')} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
                 Logout
               </button>
             </div>
@@ -1773,15 +1871,15 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         {step === 1 && (
-          <Tabs defaultValue={children[0]?.name} className="w-full">
-            <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${children.length}, minmax(0, 1fr))` }}>
-              {children.map((child) => (
+          <Tabs defaultValue={myChildren[0]?.name} className="w-full">
+            <TabsList className="grid w-full mb-6" style={{ gridTemplateColumns: `repeat(${myChildren.length}, minmax(0, 1fr))` }}>
+              {myChildren.map((child) => (
                 <TabsTrigger key={child.childId} value={child.name} className="data-[state=active]:bg-[#155323] data-[state=active]:text-white">
                   {child.name}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {children.map((child) => (
+            {myChildren.map((child) => (
               <TabsContent key={child.childId} value={child.name}>
                 <div className="space-y-4">
                   {payments.filter(payment => payment.childId === child.childId).map(payment => (
@@ -1820,11 +1918,6 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
                       </div>
                     </div>
                   ))}
-                  {payments.filter(payment => payment.child === child.name).length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
-                      No payments due for {child.name}
-                    </div>
-                  )}
                 </div>
               </TabsContent>
             ))}

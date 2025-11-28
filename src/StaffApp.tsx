@@ -189,8 +189,8 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
           ) : (
             <div className="space-y-2">
               {eventsThisMonth.map(event => (
-                <div 
-                  key={event.id} 
+                <div
+                  key={event.id}
                   className="flex items-center justify-between bg-[#f2f3f7] rounded-xl p-4 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-4">
@@ -230,6 +230,11 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
 function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNavigate: (screen: StaffScreen) => void; onAddLog: (logData: any) => void; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+  // canonical list of all child names for this screen
+  const allChildren = childrenList.map((c: any) => c.name);
+
+  
+
   const [activityType, setActivityType] = useState('');
   const [startHour, setStartHour] = useState('00');
   const [startMinute, setStartMinute] = useState('00');
@@ -260,7 +265,7 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
       setSelectedChildren([]);
       setBehavioralNotes([]);
     } else {
-      setSelectedChildren(childrenList.map(c => c.childId));
+      setSelectedChildren(childrenList.map((c: any) => c.name));
     }
   };
 
@@ -280,7 +285,7 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
   };
 
   const availableChildrenForNotes = selectedChildren.filter(
-    (childId: string) => !behavioralNotes.some((note: any) => note.childId === childId)
+    (childName: string) => !behavioralNotes.some((note: any) => note.childId === childName)
   );
 
   const handleSubmit = () => {
@@ -299,11 +304,11 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
     const endTime = `${endHour}:${endMinute}${endPeriod.toLowerCase()}`;
 
     // Create children array with canonical childrenList and their behavioral notes
-    const childrenData = childrenList.map(child => {
-      const isSelected = selectedChildren.includes(child.childId);
-      const noteObj = behavioralNotes.find((n: any) => n.childId === child.childId);
+    const childrenData = childrenList.map((child: any) => {
+      const isSelected = selectedChildren.includes(child.name);
+      const noteObj = behavioralNotes.find((n: any) => n.childId === child.name);
       return {
-        childId: child.childId,
+        childId: child.id ?? child.childId,
         name: child.name,
         selected: isSelected,
         behavioralNote: noteObj ? noteObj.note : ''
@@ -398,14 +403,14 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
                   </span>
                 </div>
                 
-                {childrenList.map(child => (
-                  <div key={child.childId} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child.childId, !selectedChildren.includes(child.childId))}>
+                {childrenList.map((child: any) => (
+                  <div key={child.name} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child.name, !selectedChildren.includes(child.name))}>
                     <button
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
-                        selectedChildren.includes(child.childId) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                        selectedChildren.includes(child.name) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
                       }`}
                     >
-                      {selectedChildren.includes(child.childId) && (
+                      {selectedChildren.includes(child.name) && (
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
                         </svg>
@@ -418,7 +423,7 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
             )}
             {selectedChildren.length > 0 && (
               <div className="mt-2 text-sm text-gray-600">
-                Selected: {selectedChildren.map(id => childrenList.find(c => c.childId === id)?.name).filter(Boolean).join(', ')}
+                Selected: {selectedChildren.join(', ')}
               </div>
             )}
           </div>
@@ -549,12 +554,11 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
                     </button>
                     {showBehavioralChildDropdown && (
                       <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
-                          {availableChildrenForNotes.map(childId => {
-                            const childName = childrenList.find(c => c.childId === childId)?.name || childId;
+                          {availableChildrenForNotes.map((childName: string) => {
                             return (
                               <button
-                                key={childId}
-                                onClick={() => addBehavioralNote(childId)}
+                                key={childName}
+                                onClick={() => addBehavioralNote(childName)}
                                 className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                               >
                                 {childName}
@@ -570,7 +574,7 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
               {behavioralNotes.length > 0 ? (
                 <div className="space-y-4">
                   {behavioralNotes.map((note, index) => {
-                    const childName = childrenList.find(c => c.childId === note.childId)?.name || note.childId;
+                    const childName = note.childId;
                     return (
                     <div key={index} className="space-y-2 p-4 bg-gray-50 rounded-xl relative">
                       <div className="flex items-center justify-between">
@@ -770,88 +774,113 @@ function StaffClassListScreen({ onNavigate, attendance, onLogout, childrenList }
   const [showMenu, setShowMenu] = useState(false);
   const students = childrenList;
 
-  return (
-    <div className="min-h-screen bg-white pb-20">
-      <div className="bg-white border-b border-gray-200 p-6 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+return (
+  <div className="min-h-screen bg-white pb-20 font-[Inter]">
+    {/* Top Bar */}
+    <div className="bg-white border-b border-gray-200 p-6 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Logo + Menu */}
+        <div className="flex justify-between items-center mb-6">
+          <Logo size="small" />
+          <button onClick={() => setShowMenu(!showMenu)}>
+            {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
 
-          {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-
-          <div className="flex justify-center gap-3">
-            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
-              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                Class List
-              </h1>
-            </div>
+        {/* Dropdown Menu */}
+        {showMenu && (
+          <div className="mb-4 space-y-2">
             <button
-              onClick={() => onNavigate('staff-attendance')}
-              className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors text-sm"
-              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              onClick={onLogout}
+              className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
             >
-              Attendance
+              Logout
             </button>
           </div>
+        )}
+
+        {/* Page Title + Attendance Button */}
+        <div className="flex justify-center gap-3">
+          <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+            <h1 className="text-2xl text-[#bf6a02] font-semibold">
+              Class List
+            </h1>
+          </div>
+
+          <button
+            onClick={() => onNavigate("staff-attendance")}
+            className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors text-sm font-semibold"
+          >
+            Attendance
+          </button>
         </div>
       </div>
+    </div>
 
-      <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <div className="bg-white rounded-2xl overflow-hidden">
-          {/* Header Row */}
-          <div className="bg-[rgba(191,106,2,0.2)] px-4 py-3">
-            <div className="grid grid-cols-4 gap-4">
-              <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Name</span>
-              <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Parental Contact</span>
-              <span className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Medical Notes</span>
-              <span className="text-sm text-center" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>Present Today</span>
-            </div>
+    {/* Main Content */}
+    <div className="max-w-6xl mx-auto p-4 md:p-8">
+      <div className="bg-white rounded-2xl overflow-hidden">
+
+        {/* Header Row */}
+        <div className="bg-[rgba(191,106,2,0.2)] px-4 py-3">
+          <div className="grid grid-cols-4 gap-4">
+            <span className="text-sm font-bold">Name</span>
+            <span className="text-sm font-bold">Parental Contact</span>
+            <span className="text-sm font-bold">Medical Notes</span>
+            <span className="text-sm font-bold text-center">Present Today</span>
           </div>
+        </div>
 
-          {/* Student Rows */}
-          {students.map((student, index) => (
-            <div 
-              key={index} 
-              className={`px-4 py-4 border-b border-gray-100 ${index % 2 === 0 ? 'bg-[#fef7ff]' : 'bg-white'}`}
-            >
-              <div className="grid grid-cols-4 gap-4 items-center">
-                <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.name}</span>
-                <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.contact}</span>
-                <span className="text-sm text-[#49454f]" style={{ fontFamily: 'Inter, sans-serif' }}>{student.medical}</span>
-                <div className="flex justify-center">
-                  {attendance[student.childId] ? (
-                    <span className="text-green-600 flex items-center gap-1">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-sm">Yes</span>
-                    </span>
-                  ) : (
-                    <span className="text-red-600 text-sm">No</span>
-                  )}
-                </div>
+        {/* Student Rows */}
+        {students.map((student, index) => (
+          <div
+            key={student.childId}
+            className={`px-4 py-4 border-b border-gray-100 ${
+              index % 2 === 0 ? "bg-[#fef7ff]" : "bg-white"
+            }`}
+          >
+            <div className="grid grid-cols-4 gap-4 items-center">
+              
+              <span className="text-sm text-[#49454f]">{student.name}</span>
+              <span className="text-sm text-[#49454f]">{student.contact}</span>
+              <span className="text-sm text-[#49454f]">{student.medical}</span>
+
+              {/* Attendance */}
+              <div className="flex justify-center">
+                {attendance[student.childId] ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="text-sm">Yes</span>
+                  </span>
+                ) : (
+                  <span className="text-red-600 text-sm">No</span>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        ))}
 
-      <StaffBottomNav current="staff-class-list" onNavigate={onNavigate} />
+      </div>
     </div>
+
+    {/* Bottom Navigation */}
+    <StaffBottomNav current="staff-class-list" onNavigate={onNavigate} />
+  </div>
   );
+
 }
 
 // Staff Events Screen
@@ -987,7 +1016,7 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout, childrenList }: 
                   onNavigate('staff-events');
                 }
               }}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl transition-colors text-sm"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl transition-colors"
               style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
             >
               Delete Event
@@ -1088,6 +1117,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
   const [description, setDescription] = useState(mode === 'edit' ? 'Get ready for a roaring adventure! Sunnyview daycare will be visiting the Royal Tyrrell Museum in Drumheller to explore real dinosaur fossils, interactive exhibits, and hands-on discovery zones. Children will learn about prehistoric creatures and enjoy a fun-filled day of exploration and curiosity.' : '');
   const [notes, setNotes] = useState(mode === 'edit' ? 'Please pack a lunch, water bottle, and comfortable walking shoes!' : '');
   const [formFile, setFormFile] = useState<File | null>(null);
+  const [removeForm, setRemoveForm] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(mode === 'edit' && event?.date ? event.date : new Date());
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
 
@@ -1216,8 +1246,10 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
       startTime: `${startHour}:${startMinute}${startPeriod.toLowerCase()}`,
       endTime: `${endHour}:${endMinute}${endPeriod.toLowerCase()}`,
       description: description.trim(),
+      // If user removed the form during edit, clear it; otherwise prefer newly uploaded file, else keep existing
       notes: notes.trim(),
-      formFile: formFile?.name || null,
+      formFile: removeForm ? null : (formFile ? formFile.name : (event?.formFile || null)),
+      hasForm: removeForm ? false : (formFile ? true : (event?.hasForm || false)),
       children: selectedChildren
     };
 
@@ -1565,52 +1597,86 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
             />
           </div>
 
-          {/* Form Upload */}
+          {/* Form Upload / Download (editing) */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
               Form (if applicable)
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
-              <input
-                type="file"
-                id="form-upload"
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx"
-                className="hidden"
-              />
-              <label
-                htmlFor="form-upload"
-                className="flex flex-col items-center justify-center cursor-pointer"
-              >
-                {formFile ? (
+            {mode === 'edit' && (event?.formFile || event?.hasForm) && !removeForm ? (
+              <div className="rounded-xl p-4 border bg-white flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <svg className="w-8 h-8 text-[#155323]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold">{event?.formFile || 'Attached Form'}</p>
+                    <p className="text-xs text-gray-500">A form is attached to this event</p>
+                  </div>
+                </div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-8 h-8 text-[#155323]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <div>
-                      <p className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-                        {formFile.name}
+                  <button
+                    onClick={() => alert('PDF download would start here')}
+                    className="bg-[#BF6A02] hover:bg-[#A55A02] text-white px-4 py-2 rounded-lg"
+                  >
+                    Download
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm('Remove the attached form from this event?')) {
+                        // Immediately switch the UI to the uploader so the user can optionally upload a new file
+                        setRemoveForm(true);
+                        setFormFile(null);
+                      }
+                    }}
+                    className="bg-[#ed3241] hover:bg-[#d42635] text-white px-4 py-2 rounded-lg"
+                  >
+                    Remove Form
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
+                <input
+                  type="file"
+                  id="form-upload"
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                />
+                <label
+                  htmlFor="form-upload"
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                >
+                  {formFile ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-8 h-8 text-[#155323]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                          {formFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Click to change file
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Click to upload or drag and drop
                       </p>
                       <p className="text-xs text-gray-500">
-                        Click to change file
+                        PDF, DOC, or DOCX
                       </p>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-sm text-gray-600 mb-1">
-                      Click to upload or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      PDF, DOC, or DOCX
-                    </p>
-                  </div>
-                )}
-              </label>
-            </div>
+                  )}
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -1639,7 +1705,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
 }
 
 // Staff View Logs Screen
-function StaffViewLogsScreen({ onNavigate, logs, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; logs: any[]; onLogout?: () => void }) {
+function StaffViewLogsScreen({ onNavigate, activities, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; activities: any[]; onLogout?: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -1677,7 +1743,7 @@ function StaffViewLogsScreen({ onNavigate, logs, onLogout }: { onNavigate: (scre
             </div>
             <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
               <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                Activities
+                Logged Activities
               </h1>
             </div>
             <div className="col-span-2"></div>
@@ -1687,7 +1753,7 @@ function StaffViewLogsScreen({ onNavigate, logs, onLogout }: { onNavigate: (scre
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="space-y-4">
-          {logs.map(log => (
+          {activities.map((log: any) => (
             <div
               key={log.id}
               className="bg-[#f2f3f7] rounded-xl p-6"
@@ -1708,7 +1774,7 @@ function StaffViewLogsScreen({ onNavigate, logs, onLogout }: { onNavigate: (scre
                         // Delete activity logic here
                       }
                     }}
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl transition-colors text-sm"
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl transition-colors"
                     style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
                   >
                     Delete
@@ -1755,13 +1821,36 @@ function StaffEditLogScreen({ onNavigate, log, onLogout, childrenList }: { onNav
   const [notes, setNotes] = useState(log?.notes || '');
   
   // Initialize selected children from canonical childrenList (use names for editing logs)
-  const allChildren = childrenList.map(c => c.name);
-  const [selectedChildren, setSelectedChildren] = useState<string[]>(
-    log?.children?.filter((c: any) => c.selected).map((c: any) => c.name) || []
-  );
-  const [behavioralNotes, setBehavioralNotes] = useState<{ child: string; note: string }[]>(
-    log?.children?.filter((c: any) => c.selected && c.behavioralNote).map((c: any) => ({ child: c.name, note: c.behavioralNote })) || []
-  );
+  const allChildren = childrenList.map((c: any) => c.name);
+  const initialSelectedChildren: string[] = Array.isArray(log?.children)
+    ? log.children
+        .filter((c: any) => (typeof c === 'string' ? true : !!c.selected))
+        .map((c: any) => (typeof c === 'string' ? c : (c.name ?? '')))
+        .filter((name: string) => !!name)
+    : [];
+  const [selectedChildren, setSelectedChildren] = useState<string[]>(initialSelectedChildren);
+  const initialBehavioralNotes: { child: string; note: string }[] = Array.isArray(log?.children)
+    ? log.children
+        .filter((c: any) => typeof c !== 'string' && !!c.selected && !!c.behavioralNote)
+        .map((c: any) => ({ child: c.name, note: c.behavioralNote }))
+    : [];
+  const [behavioralNotes, setBehavioralNotes] = useState<{ child: string; note: string }[]>(initialBehavioralNotes);
+
+  // Sync state when log prop changes (navigate sets selectedLog after mount)
+  React.useEffect(() => {
+    if (log && Array.isArray(log.children)) {
+      const sel = log.children
+        .filter((c: any) => (typeof c === 'string' ? true : !!c.selected))
+        .map((c: any) => (typeof c === 'string' ? c : (c.name ?? '')))
+        .filter((name: string) => !!name);
+      setSelectedChildren(sel);
+
+      const notes = log.children
+        .filter((c: any) => typeof c !== 'string' && !!c.selected && !!c.behavioralNote)
+        .map((c: any) => ({ child: c.name, note: c.behavioralNote }));
+      setBehavioralNotes(notes);
+    }
+  }, [log]);
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
   const [showBehavioralChildDropdown, setShowBehavioralChildDropdown] = useState(false);
 
@@ -1981,20 +2070,20 @@ function StaffEditLogScreen({ onNavigate, log, onLogout, childrenList }: { onNav
                   </span>
                 </div>
                 
-                {allChildren.map(child => (
-                  <div key={child} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child, !selectedChildren.includes(child))}>
+                {childrenList.map(child => (
+                  <div key={child.childId} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => handleChildSelection(child.name, !selectedChildren.includes(child.name))}>
                     <button
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${
-                        selectedChildren.includes(child) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
+                        selectedChildren.includes(child.name) ? 'bg-[#2c2c2c] border-[#2c2c2c]' : 'bg-white border-gray-400'
                       }`}
                     >
-                      {selectedChildren.includes(child) && (
+                      {selectedChildren.includes(child.name) && (
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 16 16">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l3 3 7-7" />
                         </svg>
                       )}
                     </button>
-                    <span className="text-sm">{child}</span>
+                    <span className="text-sm">{child.name}</span>
                   </div>
                 ))}
               </div>
@@ -2122,10 +2211,10 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
     }
     
     // Find the child info for this form
-    const child = childrenList.find(c => c.childId === form.childId);
+    const child = childrenList.find((c: any) => c.childId === form.childId);
     
     // Check if we already have a parent entry for this form
-    const existingParentEntry = acc[status].find(f => f.id === form.id);
+    const existingParentEntry = acc[status].find((f: any) => f.id === form.id);
     if (!existingParentEntry) {
       acc[status].push({
         id: form.id,
@@ -2176,7 +2265,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
 
           <div className="bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center mb-4">
             <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-              Approve Forms
+              Forms
             </h1>
           </div>
         </div>
@@ -2190,7 +2279,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
               Outstanding Forms
             </h2>
             <div className="space-y-4">
-              {outstandingForms.map(form => (
+              {outstandingForms.map((form: any) => (
                 <div
                   key={form.id}
                   onClick={() => onNavigate('staff-form-detail', form)}
@@ -2204,7 +2293,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
                       <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
                         {form.parentName}
                       </p>
-                      <p className="text-sm text-[#71727a]">Outstanding</p>
+                      <p className="text-sm text-[#71727a]">Outstanding — {form.submittedForms?.[0]?.title || ''}</p>
                     </div>
                   </div>
                 </div>
@@ -2220,7 +2309,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
               Pending Forms
             </h2>
             <div className="space-y-4">
-              {pendingForms.map(form => (
+              {pendingForms.map((form: any) => (
                 <div
                   key={form.id}
                   onClick={() => onNavigate('staff-form-detail', form)}
@@ -2234,7 +2323,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
                       <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
                         {form.parentName}
                       </p>
-                      <p className="text-sm text-[#71727a]">Pending Review</p>
+                      <p className="text-sm text-[#71727a]">Pending Review — {form.submittedForms?.[0]?.title || ''}</p>
                     </div>
                   </div>
                 </div>
@@ -2250,7 +2339,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
               Completed Forms
             </h2>
             <div className="space-y-4">
-              {completedForms.map(form => (
+              {completedForms.map((form: any) => (
                 <div
                   key={form.id}
                   onClick={() => onNavigate('staff-form-detail', form)}
@@ -2265,11 +2354,8 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
                         <p className="font-semibold text-[#1f2024]" style={{ fontFamily: 'Inter, sans-serif' }}>
                           {form.parentName}
                         </p>
-                        <p className="text-sm text-[#71727a]">Completed</p>
+                        <p className="text-sm text-[#71727a]">Completed — {form.submittedForms?.[0]?.title || ''}</p>
                       </div>
-                    </div>
-                    <div className="bg-[#ed3241] rounded-full w-6 h-6 flex items-center justify-center">
-                      <span className="text-white text-xs font-semibold">{form.formCount}</span>
                     </div>
                   </div>
                 </div>
@@ -2285,7 +2371,7 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
 }
 
 // Staff Form Detail Screen
-function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNavigate: (screen: StaffScreen) => void; onLogout?: () => void }) {
+function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms }: { form: any; onNavigate: (screen: StaffScreen) => void; onLogout?: () => void; forms: any[]; setForms?: (forms: any[]) => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -2323,7 +2409,11 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
             </div>
             <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
               <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                Drumheller Field Trip Permission Form
+                {(
+                  // Support both grouped form entries and raw form objects
+                  (form && (form.title || form.formData?.title || form.submittedForms?.[0]?.title)) ||
+                  'Permission Form'
+                )}
               </h1>
             </div>
             <div className="col-span-2"></div>
@@ -2336,29 +2426,47 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
           {form ? (
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <div className="space-y-6">
+
                 {/* Form Document Section */}
                 <div className="bg-[#f2f3f7] rounded-xl p-6">
-                  <h3 className="text-lg mb-3" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                  <h3
+                    className="text-lg mb-3"
+                    style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
+                  >
                     Form Document
                   </h3>
                   <p className="text-sm text-gray-600 mb-4">
                     Download a copy of this form for your records
                   </p>
+
                   <button
-                    onClick={() => alert('PDF download would start here')}
+                    onClick={() => alert("PDF download would start here")}
                     className="flex items-center gap-2 bg-[#BF6A02] hover:bg-[#A55A02] text-white py-3 px-6 rounded-lg transition-all shadow-md"
-                    style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+                    style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
                     Download PDF
                   </button>
                 </div>
 
-                {/* Submitted Information */}
+                {/* Parent Name */}
                 <div>
-                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
+                  >
                     Parent/Guardian Name
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
@@ -2366,17 +2474,12 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                   </div>
                 </div>
 
+                {/* Emergency Contact */}
                 <div>
-                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                    Contact Number
-                  </label>
-                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                    {form.emergencyContact}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
+                  >
                     Emergency Contact
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
@@ -2384,66 +2487,84 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
                   </div>
                 </div>
 
+                {/* Additional Notes */}
                 <div>
-                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
+                  >
                     Additional Notes
                   </label>
+
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg min-h-[100px]">
-                      <p className={form.notes ? 'text-gray-700' : 'text-gray-400'}>
-                        {form.notes || 'Any additional information...'}
+                    <p className={form.notes ? "text-gray-700" : "text-gray-400"}>
+                      {form.notes || "Any additional information..."}
                     </p>
                   </div>
                 </div>
 
-                {/* E-Signature Section */}
+                {/* E-Signature */}
                 <div>
-                  <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
+                  <label
+                    className="block text-sm mb-2"
+                    style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
+                  >
                     E-Signature *
                   </label>
                   <p className="text-xs text-gray-600 mb-2">
                     Parent signature below
                   </p>
+
                   <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
-                    <p className="text-2xl italic text-gray-800" style={{ fontFamily: 'Brush Script MT, cursive' }}>
+                    <p
+                      className="text-2xl italic text-gray-800"
+                      style={{ fontFamily: "Brush Script MT, cursive" }}
+                    >
                       {form.signature}
                     </p>
                   </div>
                 </div>
 
-                {form.status === 'completed' ? (
+                {/* Approve / Reject - Only show for pending forms */}
+                {(form.status === 'pending' || form.formData?.status === 'pending') && (
                   <div className="flex justify-center mt-6 gap-4">
-                    <button 
+                    <button
                       onClick={() => {
-                        alert(`Form "${form.title}" approved!`);
+                        if (typeof setForms === 'function') {
+                          setForms(forms.map((f: any) => f.id === form.id ? { ...f, status: 'completed' } : f));
+                        }
+                        alert(`Form "${form.title}" approved.`);
                         onNavigate('staff-forms');
                       }}
-                      className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors"
+                      className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-8 py-3 rounded-xl transition-colors"
                       style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
                     >
-                      Approve Form
+                      Approve
                     </button>
-                  </div>
-                ) : (
-                  <div className="flex justify-center mt-6">
-                    <button 
+
+                    <button
                       onClick={() => {
-                        if (confirm(`Are you sure you want to delete the form from ${form.parentName}?`)) {
-                          alert('Form deleted!');
+                        if (confirm(`Reject this form and send back to outstanding?`)) {
+                          if (typeof setForms === 'function') {
+                            setForms(forms.map((f: any) => f.id === form.id ? { ...f, status: 'outstanding' } : f));
+                          }
+                          alert(`Form "${form.title}" rejected.`);
                           onNavigate('staff-forms');
                         }
                       }}
-                      className="bg-[#ed3241] hover:bg-[#d42635] text-white px-16 py-4 rounded-xl transition-colors"
+                      className="bg-[#ed3241] hover:bg-[#d42635] text-white px-8 py-3 rounded-xl transition-colors"
                       style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
                     >
-                      Delete Form
+                      Reject
                     </button>
                   </div>
                 )}
               </div>
             </div>
-          ))}
+          ) : null}
         </div>
       </div>
+
 
       <StaffBottomNav current="staff-forms" onNavigate={onNavigate} />
     </div>
@@ -2453,6 +2574,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout }: { form: any; onNa
 // Staff Fees Screen
 function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void; payments: any[]; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [expandedChildren, setExpandedChildren] = useState<string[]>([]);
 
   // Group payments by child and compute totals
   const childPaymentMap = childrenList.reduce((acc, child) => {
@@ -2523,11 +2645,7 @@ function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onN
             return (
               <div
                 key={child.childId}
-                className={`rounded-xl p-4 border-l-4 ${
-                  paymentData.status === 'outstanding' ? 'bg-[#f2f3f7] border-[#ef4444]' :
-                  paymentData.status === 'pending' ? 'bg-white border-[#eab308]' :
-                  'bg-green-50 border-green-500'
-                }`}
+                className="rounded-xl p-4 border-l-4 bg-[#f2f3f7] border-[#ef4444]"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -2543,16 +2661,45 @@ function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onN
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span 
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold`}
-                      style={{
-                        backgroundColor: paymentData.status === 'paid' ? '#10b981' : paymentData.status === 'pending' ? '#eab308' : '#ef4444',
-                        color: 'white'
-                      }}>
-                      {paymentData.status === 'paid' ? 'Completed' : paymentData.status.charAt(0).toUpperCase() + paymentData.status.slice(1)}
-                    </span>
+                    <button
+                      onClick={() => {
+                        setExpandedChildren(prev => prev.includes(child.childId) ? prev.filter(id => id !== child.childId) : [...prev, child.childId]);
+                      }}
+                      className="px-3 py-1 rounded-lg border hover:bg-gray-100 text-sm"
+                    >
+                      {expandedChildren.includes(child.childId) ? 'Hide Details' : 'View Details'}
+                    </button>
                   </div>
                 </div>
+                {expandedChildren.includes(child.childId) && (
+                  <div className="mt-4 bg-white border border-gray-100 rounded-lg p-3">
+                    {paymentData.childPayments.length === 0 ? (
+                      <p className="text-sm text-gray-500">No payments for this child.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {paymentData.childPayments.map((p: any) => (
+                          <div key={p.paymentId} className="flex justify-between items-center px-2 py-2 rounded hover:bg-gray-50">
+                            <div>
+                              <div className="text-sm font-medium">{p.description || 'Fee'}</div>
+                              <div className="text-xs text-gray-500">
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                  p.status === 'completed' ? 'bg-green-500 text-white' : 
+                                  p.status === 'pending' ? 'bg-yellow-500 text-white' : 
+                                  'bg-red-500 text-white'
+                                }`}>
+                                  {p.status === 'completed' ? 'Paid' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-sm font-semibold">${(p.amount || 0).toFixed(2)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2595,6 +2742,21 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
   const allChildrenSelected = selectedChildren.length === childrenList.length;
   const someChildrenSelected = selectedChildren.length > 0 && !allChildrenSelected;
 
+  // When an event is selected, auto-select its associated children
+  React.useEffect(() => {
+    if (feeType === 'event' && selectedEventId) {
+      const ev = events.find((e: any) => e.id === selectedEventId);
+      if (ev && Array.isArray(ev.children)) {
+        setSelectedChildren(ev.children.slice());
+      } else {
+        setSelectedChildren([]);
+      }
+    } else if (feeType === 'tuition') {
+      // For tuition, default to no selection
+      setSelectedChildren([]);
+    }
+  }, [selectedEventId, feeType]);
+
   const handleSubmit = () => {
     if (selectedChildren.length === 0) {
       alert('Please select at least one child');
@@ -2615,12 +2777,12 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
 
     // Create new payment records for each selected child
     if (typeof setPayments === 'function') {
-      setPayments((prevPayments: any[]) => {
-        const maxId = prevPayments.reduce((max, p) => {
+      const prevPayments: any[] = Array.isArray(payments) ? payments : [];
+      const maxId = prevPayments.reduce((max: number, p: any) => {
           const m = p.paymentId && p.paymentId.toString().startsWith('p') ? parseInt(p.paymentId.toString().slice(1)) : 0;
           return Math.max(max, isNaN(m) ? 0 : m);
         }, 0);
-        let nextId = maxId + 1;
+      let nextId = maxId + 1;
 
         const newPayments = selectedChildren.map((childId: string) => ({
           paymentId: `p${nextId++}`,
@@ -2631,8 +2793,8 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
           eventId: feeType === 'event' ? selectedEventId : null
         }));
 
-        return prevPayments.concat(newPayments);
-      });
+      const next = prevPayments.concat(newPayments);
+      setPayments(next);
     }
 
     alert(`Fee of $${amount} added to ${selectedChildren.length} child(ren)`);
@@ -2819,16 +2981,16 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
                       </span>
                     </label>
                   </div>
-                  {allChildren.map((child) => (
-                    <div key={child} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                  {childrenList.map((child) => (
+                    <div key={child.childId} className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={selectedChildren.includes(child)}
-                          onChange={(e) => handleChildSelection(child, e.target.checked)}
+                          checked={selectedChildren.includes(child.childId)}
+                          onChange={(e) => handleChildSelection(child.childId, e.target.checked)}
                           className="w-5 h-5 rounded border-gray-300"
                         />
-                        <span>{childrenList.find(c => c.childId === child)?.name || child}</span>
+                        <span>{child.name}</span>
                       </label>
                     </div>
                   ))}
@@ -2838,20 +3000,23 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
 
             {selectedChildren.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {selectedChildren.map((child) => (
+                {selectedChildren.map((childId) => {
+                  const childName = childrenList.find(c => c.childId === childId)?.name || childId;
+                  return (
                   <div
-                    key={child}
+                    key={childId}
                     className="bg-[#155323] text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2"
                   >
-                    <span>{child}</span>
+                    <span>{childName}</span>
                     <button
-                      onClick={() => handleChildSelection(child, false)}
+                      onClick={() => handleChildSelection(childId, false)}
                       className="hover:bg-white/20 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -2882,16 +3047,18 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
 }
 
 // Main Staff App Component
-export default function StaffApp({ onLogout, childrenList, events, setEvents, forms, setForms, payments, setPayments }: { onLogout?: () => void; childrenList: Child[]; events: any[]; setEvents: (events: any[]) => void; forms: any[]; setForms?: (forms: any[]) => void; payments: any[]; setPayments?: (payments: any[]) => void }) {
+export default function StaffApp({ onLogout, childrenList, events, setEvents, forms, setForms, payments, setPayments, activities, setActivities }: { onLogout?: () => void; childrenList: Child[]; events: any[]; setEvents: (events: any[]) => void; forms: any[]; setForms?: (forms: any[]) => void; payments: any[]; setPayments?: (payments: any[]) => void; activities: any[]; setActivities: (activities: any[]) => void }) {
   const [currentScreen, setCurrentScreen] = useState<StaffScreen>('staff-home');
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedForm, setSelectedForm] = useState<any>(null);
   const [attendance, setAttendance] = useState(
     Object.fromEntries(childrenList.map(c => [c.childId, false])) as { [key: string]: boolean }
   );
 
-
-  // Activity logs state
-  const [logs, setLogs] = useState([
+  // Initialize activities with sample data if empty
+  React.useEffect(() => {
+    if (activities.length === 0) {
+      setActivities([
     { 
       id: 1, 
       activityName: 'Nap Time', 
@@ -2965,15 +3132,17 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       ]
     },
   ]);
+    }
+  }, [activities.length, setActivities]);
 
   const [selectedLog, setSelectedLog] = useState<any>(null);
 
-  const addLog = (logData: any) => {
+  const addActivity = (logData: any) => {
     const newLog = {
-      id: logs.length + 1,
+      id: activities.length + 1,
       ...logData
     };
-    setLogs([newLog, ...logs]);
+    setActivities([newLog, ...activities]);
   };
 
   const addEvent = (eventData: any) => {
@@ -2982,15 +3151,14 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       ...eventData,
       hasForm: eventData.hasForm ?? false
     };
-    setEvents((prev: any[]) => {
-      const next = [...prev, newEvent].sort((a, b) => a.date.getTime() - b.date.getTime());
-      return next;
-    });
+    const nextEvents = [...events, newEvent].sort((a: any, b: any) => a.date.getTime() - b.date.getTime());
+    setEvents(nextEvents);
 
     // create forms for the children of the new event only if event.hasForm is true and setter provided
     if (typeof setForms === 'function' && newEvent.hasForm && Array.isArray(newEvent.children) && newEvent.children.length > 0) {
-      setForms((prevForms: any[]) => {
-        const maxId = prevForms.reduce((max, f) => {
+      {
+        const prevForms: any[] = Array.isArray(forms) ? forms : [];
+        const maxId = prevForms.reduce((max: number, f: any) => {
           const m = f.id && f.id.toString().startsWith('f') ? parseInt(f.id.toString().slice(1)) : 0;
           return Math.max(max, isNaN(m) ? 0 : m);
         }, 0);
@@ -3002,9 +3170,14 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
           childId,
           dueDate: newEvent.date || new Date(),
           status: 'outstanding',
+          parentName: '',
+          emergencyContact: '',
+          notes: '',
+          signature: ''
         }));
-        return prevForms.concat(newForms);
-      });
+        const nextForms = prevForms.concat(newForms);
+        setForms && setForms(nextForms);
+      }
     }
   };
 
@@ -3018,10 +3191,11 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       hasForm: updatedEvent.hasForm !== undefined ? updatedEvent.hasForm : prevEvent?.hasForm ?? false
     };
 
-    setEvents(prev => {
-      const merged = prev.map(e => e.id === updatedEvent.id ? { ...e, ...eventToSave } : e);
-      return merged.sort((a, b) => a.date.getTime() - b.date.getTime());
-    });
+    {
+      const merged = events.map((e: any) => e.id === updatedEvent.id ? { ...e, ...eventToSave } : e);
+      const nextEvents = merged.sort((a: any, b: any) => a.date.getTime() - b.date.getTime());
+      setEvents(nextEvents);
+    }
     setSelectedEvent(eventToSave);
 
     // synchronize forms when children list changes (only if event.hasForm is true)
@@ -3032,8 +3206,8 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       const added = newChildren.filter((c) => !prevChildren.includes(c));
       const removed = prevChildren.filter((c) => !newChildren.includes(c));
 
-      setForms((prevForms: any[]) => {
-        let nextForms = [...prevForms];
+      {
+        let nextForms = [...(Array.isArray(forms) ? forms : [])];
 
         // remove forms for removed children for this event
         if (removed.length > 0) {
@@ -3055,13 +3229,23 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
             childId,
             dueDate: eventToSave.date || new Date(),
             status: 'outstanding',
+            parentName: '',
+            emergencyContact: '',
+            notes: '',
+            signature: ''
           }));
 
           nextForms = nextForms.concat(newForms);
         }
 
-        return nextForms;
-      });
+        setForms && setForms(nextForms);
+      }
+    }
+    // If the event previously had a form but now does not, remove all form entries for this event
+    if (typeof setForms === 'function' && prevEvent && prevEvent.hasForm && !eventToSave.hasForm) {
+      const prevForms = Array.isArray(forms) ? forms : [];
+      const filtered = prevForms.filter((f: any) => f.eventId !== updatedEvent.id);
+      setForms && setForms(filtered);
     }
   };
 
@@ -3069,6 +3253,7 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
     setCurrentScreen(screen);
     if (screen === 'staff-event-details' || screen === 'staff-edit-event') setSelectedEvent(data);
     if (screen === 'staff-edit-log') setSelectedLog(data);
+    if (screen === 'staff-form-detail') setSelectedForm(data);
   };
 
   const renderScreen = () => {
@@ -3076,7 +3261,7 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       case 'staff-home':
         return <StaffHomeScreen onNavigate={navigate} events={events} onLogout={onLogout} />;
       case 'staff-log':
-        return <StaffLogScreen onNavigate={navigate} onAddLog={addLog} onLogout={onLogout} childrenList={childrenList} />;
+        return <StaffLogScreen onNavigate={navigate} onAddLog={addActivity} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-class-list':
         return <StaffClassListScreen onNavigate={navigate} attendance={attendance} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-attendance':
@@ -3090,13 +3275,13 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       case 'staff-edit-event':
         return <StaffAddEditEventScreen event={selectedEvent} onNavigate={navigate} mode="edit" onAddEvent={addEvent} onUpdateEvent={updateEvent} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-view-logs':
-        return <StaffViewLogsScreen onNavigate={navigate} logs={logs} onLogout={onLogout} />;
+        return <StaffViewLogsScreen onNavigate={navigate} activities={activities} onLogout={onLogout} />;
       case 'staff-edit-log':
         return <StaffEditLogScreen onNavigate={navigate} log={selectedLog} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-forms':
         return <StaffFormsScreen onNavigate={navigate} onLogout={onLogout} forms={forms} childrenList={childrenList} />;
       case 'staff-form-detail':
-        return <StaffFormDetailScreen form={selectedEvent} onNavigate={navigate} onLogout={onLogout} />;
+        return <StaffFormDetailScreen form={selectedForm} onNavigate={navigate} onLogout={onLogout} forms={forms} setForms={setForms} />;
       case 'staff-fees':
         return <StaffFeesScreen onNavigate={navigate} onLogout={onLogout} payments={payments} childrenList={childrenList} />;
       case 'staff-add-fee':
