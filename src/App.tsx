@@ -1627,6 +1627,8 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
   const [parentName, setParentName] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
   const [notes, setNotes] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showSuccessPage, setShowSuccessPage] = useState(false);
 
   useEffect(() => {
     if (form) {
@@ -1647,6 +1649,48 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
 
   return (
     <div className="min-h-screen bg-white">
+      {showSuccessPage ? (
+        // Success Page
+        <div className="min-h-screen bg-white flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-lg p-8 text-center max-w-md w-full">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            
+            <h2 className="text-3xl mb-4" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#155323' }}>
+              Form Submitted Successfully!
+            </h2>
+            
+            <p className="text-gray-600 mb-6">Your form has been submitted and is now pending review. We'll notify you once it has been processed.</p>
+            
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left space-y-2">
+              <div className="flex justify-between">
+                <p className="text-sm text-gray-600">Form</p>
+                <p className="font-semibold">{form?.title}</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-sm text-gray-600">Parent/Guardian</p>
+                <p className="font-semibold">{parentName}</p>
+              </div>
+              <div className="flex justify-between border-t border-gray-200 pt-2">
+                <p className="text-sm text-gray-600">Status</p>
+                <p className="font-semibold text-[#eab308]">Pending Review</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onNavigate('forms')}
+              className="w-full bg-[#155323] text-white py-4 px-6 rounded-xl hover:bg-[#0d3a18] transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}
+            >
+              Return to Forms
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="bg-white border-b border-gray-200 p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
@@ -1706,7 +1750,7 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
 
             <div>
               <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                Parent/Guardian Name
+                Parent/Guardian Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -1719,7 +1763,7 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
 
             <div>
               <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                Emergency Contact
+                Emergency Contact <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -1785,14 +1829,54 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
                 className="text-sm text-gray-600 cursor-pointer flex-1"
                 onClick={() => setIsConsentChecked(!isConsentChecked)}
               >
-                I consent to the information provided and understand the terms and conditions.
+                I consent to the information provided and understand the terms and conditions. <span className="text-red-500">*</span>
               </label>
             </div>
+            {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+                <p className="text-sm font-semibold text-red-800 mb-2">Please correct the following errors:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="text-sm text-red-700">{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <button
               onClick={() => {
+                // Validate required fields
+                const errors: string[] = [];
+                
+                if (!parentName.trim()) {
+                  errors.push('Parent/Guardian Name is required');
+                }
+                
+                if (!emergencyContact.trim()) {
+                  errors.push('Emergency Contact is required');
+                }
+                
+                // Check if signature canvas is empty
+                const hasSignature = signatureRef.current && !signatureRef.current.isEmpty();
+                if (!hasSignature) {
+                  errors.push('E-Signature is required');
+                }
+                
+                if (!isConsentChecked) {
+                  errors.push('You must consent to the terms and conditions');
+                }
+                
+                // If there are validation errors, display them and don't submit
+                if (errors.length > 0) {
+                  setValidationErrors(errors);
+                  return;
+                }
+                
+                // Clear any previous validation errors
+                setValidationErrors([]);
+                
                 // Capture signature as data URL (if present)
                 const signatureData = signatureRef.current && !signatureRef.current.isEmpty()
-                  ? signatureRef.current.getTrimmedCanvas().toDataURL('image/png')
+                  ? signatureRef.current.toDataURL('image/png')
                   : '';
 
                 // Update form with parent fields and set status to pending
@@ -1800,7 +1884,9 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
                   f.id === form.id ? { ...f, status: 'pending', parentName, emergencyContact, notes, signature: signatureData } : f
                 );
                 setAllForms(updatedForms);
-                onNavigate('forms');
+                
+                // Show success page
+                setShowSuccessPage(true);
               }}
               className="w-full bg-[#155323] text-white py-4 px-6 rounded-xl hover:bg-[#0d3a18] transition-all shadow-lg"
               style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}
@@ -1810,6 +1896,8 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
@@ -1827,6 +1915,11 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
 
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [cardholderName, setCardholderName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Filter children by logged-in parent
   const myChildren = loggedInParentId ? children.filter(child => child.parentId === loggedInParentId) : [];
@@ -1954,10 +2047,12 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                  Cardholder Name
+                  Cardholder Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  value={cardholderName}
+                  onChange={(e) => setCardholderName(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                   placeholder="John Doe"
                 />
@@ -1965,41 +2060,95 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
 
               <div>
                 <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                  Card Number
+                  Card Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                   placeholder="1234 5678 9012 3456"
+                  maxLength={19}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                    Expiry Date
+                    Expiry Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                     placeholder="MM/YY"
+                    maxLength={5}
                   />
                 </div>
                 <div>
                   <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
-                    CVV
+                    CVV <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    value={cvv}
+                    onChange={(e) => setCvv(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                     placeholder="123"
+                    maxLength={4}
                   />
                 </div>
               </div>
             </div>
 
+            {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <p className="text-sm font-semibold text-red-800 mb-2">Please correct the following errors:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="text-sm text-red-700">{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <button
               onClick={() => {
+                // Validate all fields
+                const errors: string[] = [];
+                
+                if (!cardholderName.trim()) {
+                  errors.push('Cardholder Name is required');
+                }
+                
+                if (!cardNumber.trim()) {
+                  errors.push('Card Number is required');
+                } else if (cardNumber.replace(/\s/g, '').length < 13) {
+                  errors.push('Card Number must be at least 13 digits');
+                }
+                
+                if (!expiryDate.trim()) {
+                  errors.push('Expiry Date is required');
+                } else if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+                  errors.push('Expiry Date must be in MM/YY format');
+                }
+                
+                if (!cvv.trim()) {
+                  errors.push('CVV is required');
+                } else if (cvv.length < 3) {
+                  errors.push('CVV must be at least 3 digits');
+                }
+                
+                // If there are validation errors, display them and don't submit
+                if (errors.length > 0) {
+                  setValidationErrors(errors);
+                  return;
+                }
+                
+                // Clear validation errors
+                setValidationErrors([]);
+                
                 // Update payment status to pending
                 const updatedPayments = allPayments.map(p =>
                   p.paymentId === selectedPayment.paymentId ? { ...p, status: 'pending' } : p

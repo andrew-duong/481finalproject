@@ -230,6 +230,7 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
 function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNavigate: (screen: StaffScreen) => void; onAddLog: (logData: any) => void; onLogout?: () => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   // canonical list of all child names for this screen
   const allChildren = childrenList.map((c: any) => c.name);
 
@@ -289,15 +290,27 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
   );
 
   const handleSubmit = () => {
-    // Validation
+    const errors: string[] = [];
     if (selectedChildren.length === 0) {
-      alert('Please select at least one child');
-      return;
+      errors.push('Please select at least one child');
     }
     if (!activityType.trim()) {
-      alert('Please enter an activity name');
+      errors.push('Please enter an activity name');
+    }
+    if (!startHour || !startMinute) {
+      errors.push('Please enter a start time');
+    }
+    if (!endHour || !endMinute) {
+      errors.push('Please enter an end time');
+    }
+    if (!notes.trim()) {
+      errors.push('Please enter general notes');
+    }
+    if (errors.length > 0) {
+      setValidationErrors(errors);
       return;
     }
+    setValidationErrors([]);
 
     // Format time strings
     const startTime = `${startHour}:${startMinute}${startPeriod.toLowerCase()}`;
@@ -357,18 +370,31 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
             </div>
           )}
 
-          <div className="flex justify-center">
-            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <div className="col-span-2"></div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
               <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Log Activity
               </h1>
             </div>
+            <div className="col-span-2"></div>
           </div>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto p-4 md:p-8">
         <div className="space-y-6">
+          {/* Validation Errors */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+              <h3 className="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {/* Select Children */}
           <div className="relative">
             <button
@@ -800,17 +826,22 @@ return (
           </div>
         )}
 
-        {/* Page Title + Attendance Button */}
-        <div className="flex justify-center gap-3">
-          <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
-            <h1 className="text-2xl text-[#bf6a02] font-semibold">
+        {/* Page Title */}
+        <div className="grid grid-cols-12 gap-4 items-center mb-4">
+          <div className="col-span-2"></div>
+          <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+            <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
               Class List
             </h1>
           </div>
+          <div className="col-span-2"></div>
+        </div>
 
+        {/* Attendance Button */}
+        <div className="flex justify-end mb-4">
           <button
             onClick={() => onNavigate("staff-attendance")}
-            className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors text-sm font-semibold"
+            className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-6 py-3 rounded-xl transition-colors font-semibold"
           >
             Attendance
           </button>
@@ -909,12 +940,14 @@ function StaffEventsScreen({ events, onNavigate, onLogout }: { events: any[]; on
             </div>
           )}
 
-          <div className="flex justify-center items-center mb-4">
-            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-2"></div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
               <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Upcoming Events
               </h1>
             </div>
+            <div className="col-span-2"></div>
           </div>
 
           <div className="flex justify-end">
@@ -1120,6 +1153,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
   const [removeForm, setRemoveForm] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(mode === 'edit' && event?.date ? event.date : new Date());
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const allChildren = childrenList;
 
@@ -1190,19 +1224,35 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
   };
 
   const handleCreateEvent = () => {
-    // Validation
+    const errors: string[] = [];
+
+    // Validate all required fields
     if (!title.trim()) {
-      alert('Please enter an event title');
-      return;
+      errors.push('Please enter an event title');
+    }
+    if (!location.trim()) {
+      errors.push('Please enter a location');
     }
     if (!selectedDate) {
-      alert('Please select a date for the event');
-      return;
+      errors.push('Please select a date for the event');
+    }
+    if (!startHour || !startMinute) {
+      errors.push('Please enter a start time');
+    }
+    if (!endHour || !endMinute) {
+      errors.push('Please enter an end time');
     }
     if (selectedChildren.length === 0) {
-      alert('Please select at least one child');
+      errors.push('Please select at least one child');
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
       return;
     }
+
+    // Clear errors
+    setValidationErrors([]);
 
     // Create event object
     const newEvent = {
@@ -1223,19 +1273,35 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
   };
 
   const handleSaveChanges = () => {
-    // Validation same as create
+    const errors: string[] = [];
+
+    // Validate all required fields
     if (!title.trim()) {
-      alert('Please enter an event title');
-      return;
+      errors.push('Please enter an event title');
+    }
+    if (!location.trim()) {
+      errors.push('Please enter a location');
     }
     if (!selectedDate) {
-      alert('Please select a date for the event');
-      return;
+      errors.push('Please select a date for the event');
+    }
+    if (!startHour || !startMinute) {
+      errors.push('Please enter a start time');
+    }
+    if (!endHour || !endMinute) {
+      errors.push('Please enter an end time');
     }
     if (selectedChildren.length === 0) {
-      alert('Please select at least one child');
+      errors.push('Please select at least one child');
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
       return;
     }
+
+    // Clear errors
+    setValidationErrors([]);
 
     // Build updated event object (preserve original id if available)
     const updatedEvent = {
@@ -1308,7 +1374,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
           {/* Title */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Event Title
+              Event Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -1322,7 +1388,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
           {/* Location */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Location
+              Location <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -1336,7 +1402,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
           {/* Date with Calendar Picker */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Date
+              Date <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <button
@@ -1408,7 +1474,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
           {/* Duration - Start Time */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Start Time
+              Start Time <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-2">
               <select
@@ -1452,7 +1518,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
           {/* Duration - End Time */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              End Time
+              End Time <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-2">
               <select
@@ -1496,7 +1562,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
           {/* Children Selection */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Select Children
+              Select Children <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <button
@@ -1678,6 +1744,18 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
               </div>
             )}
           </div>
+
+          {/* Validation Errors */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+              <h3 className="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-4 justify-center pt-4">
@@ -2263,10 +2341,14 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
             </div>
           )}
 
-          <div className="bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center mb-4">
-            <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-              Forms
-            </h1>
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-2"></div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
+              <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                Forms
+              </h1>
+            </div>
+            <div className="col-span-2"></div>
           </div>
         </div>
       </div>
@@ -2617,12 +2699,14 @@ function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onN
             </div>
           )}
 
-          <div className="flex justify-center items-center mb-4">
-            <div className="bg-[rgba(191,106,2,0.19)] rounded-xl px-6 py-3">
+          <div className="grid grid-cols-12 gap-4 items-center mb-4">
+            <div className="col-span-2"></div>
+            <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
               <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Fees
               </h1>
             </div>
+            <div className="col-span-2"></div>
           </div>
 
           <div className="flex justify-end">
@@ -2682,11 +2766,10 @@ function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onN
                             <div>
                               <div className="text-sm font-medium">{p.description || 'Fee'}</div>
                               <div className="text-xs text-gray-500">
-                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                  p.status === 'completed' ? 'bg-green-500 text-white' : 
-                                  p.status === 'pending' ? 'bg-yellow-500 text-white' : 
-                                  'bg-red-500 text-white'
-                                }`}>
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold`} style={{
+                          backgroundColor: p.status === 'completed' ? '#10b981' : p.status === 'pending' ? '#eab308' : '#ef4444',
+                          color: 'white'
+                        }}>
                                   {p.status === 'completed' ? 'Paid' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                                 </span>
                               </div>
@@ -2722,6 +2805,7 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
 
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const handleChildSelection = (childId: string, checked: boolean) => {
     if (checked) {
@@ -2758,22 +2842,35 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
   }, [selectedEventId, feeType]);
 
   const handleSubmit = () => {
-    if (selectedChildren.length === 0) {
-      alert('Please select at least one child');
-      return;
-    }
+    const errors: string[] = [];
+
+    // Validate amount
     if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
-      return;
+      errors.push('Please enter a valid amount greater than $0');
     }
-    if (!description.trim()) {
-      alert('Please enter a description');
-      return;
-    }
+
+    // Validate event selection if on event tab
     if (feeType === 'event' && !selectedEventId) {
-      alert('Please select an event');
+      errors.push('Please select an event');
+    }
+
+    // Validate description
+    if (!description.trim()) {
+      errors.push('Please enter a description');
+    }
+
+    // Validate at least one child selected
+    if (selectedChildren.length === 0) {
+      errors.push('Please select at least one child');
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
       return;
     }
+
+    // Clear errors and proceed
+    setValidationErrors([]);
 
     // Create new payment records for each selected child
     if (typeof setPayments === 'function') {
@@ -2880,7 +2977,7 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
           {/* Amount */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Amount ($)
+              Amount ($) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -2896,7 +2993,7 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
           {feeType === 'event' && (
             <div className="space-y-2">
               <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-                Select Event
+                Select Event <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedEventId || ''}
@@ -2932,7 +3029,7 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
           {/* Description */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -2946,7 +3043,7 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
           {/* Children Selection */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Select Children
+              Select Children <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <button
@@ -3020,6 +3117,18 @@ function StaffAddFeeScreen({ onNavigate, onLogout, childrenList, payments, setPa
               </div>
             )}
           </div>
+
+          {/* Validation Errors */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+              <h3 className="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-4 justify-center pt-4">
