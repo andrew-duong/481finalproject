@@ -59,12 +59,12 @@ export default function App() {
 
   // Parent accounts - one per parentId
   const parentAccounts = [
-    { parentId: 'p1', email: 'parent1@example.com', password: 'password1' },
-    { parentId: 'p2', email: 'parent2@example.com', password: 'password2' },
-    { parentId: 'p3', email: 'parent3@example.com', password: 'password3' },
-    { parentId: 'p4', email: 'parent4@example.com', password: 'password4' },
-    { parentId: 'p5', email: 'parent5@example.com', password: 'password5' },
-    { parentId: 'p6', email: 'parent6@example.com', password: 'password6' },
+    { parentId: 'p1', email: 'darren@sunnyview.com', password: 'cpsc481' },
+    { parentId: 'p2', email: 'lindsay@sunnyview.com', password: 'cpsc481' },
+    { parentId: 'p3', email: 'george@sunnyview.com', password: 'cpsc481' },
+    { parentId: 'p4', email: 'sofia@sunnyview.com', password: 'cpsc481' },
+    { parentId: 'p5', email: 'joanne@sunnyview.com', password: 'cpsc481' },
+    { parentId: 'p6', email: 'paula@sunnyview.com', password: 'cpsc481' },
   ];
 
   const handleStaffLogout = () => {
@@ -404,15 +404,14 @@ export default function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'landing':
-        return <LandingScreen onNavigate={navigate} onStaffMode={() => navigate('staff-login')} />;
+        return <LandingScreen onNavigate={navigate} onStaffMode={() => navigate('login')} />;
       case 'login':
-        return <LoginScreen onNavigate={navigate} parentAccounts={parentAccounts} onLogin={handleParentLogin} />;
+        return <LoginScreen onNavigate={navigate} parentAccounts={parentAccounts} onLogin={handleParentLogin} onStaffLogin={() => setAppMode('staff')} />;
       case 'register':
         return <RegisterScreen onNavigate={navigate} />;
       case 'forgot-password':
         return <ForgotPasswordScreen onNavigate={navigate} />;
-      case 'staff-login':
-        return <StaffLoginScreen onNavigate={navigate} onStaffLogin={() => setAppMode('staff')} />;
+
       case 'home':
         return <HomeScreen onNavigate={navigate} events={events} children={children} loggedInParentId={loggedInParentId} onLogout={handleParentLogout} />;
       case 'events':
@@ -470,10 +469,10 @@ function LandingScreen({ onNavigate, onStaffMode }: { onNavigate: (screen: Scree
         <div className="space-y-4">
           <button
             onClick={() => onNavigate('login')}
-            className="w-full bg-[#BF6A02] hover:bg-[#A55A02] text-white py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
+            className="w-full bg-[#155323] hover:bg-[#0f3d1a] text-white py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
             style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '22px' }}
           >
-            Parent Login
+            Login
           </button>
           
           <button
@@ -483,14 +482,6 @@ function LandingScreen({ onNavigate, onStaffMode }: { onNavigate: (screen: Scree
           >
             Register
           </button>
-
-          <button
-            onClick={() => onStaffMode && onStaffMode()}
-            className="w-full bg-[#155323] hover:bg-[#0f3d1a] text-white py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg"
-            style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '22px' }}
-          >
-            Staff Login
-          </button>
         </div>
       </div>
     </div>
@@ -498,21 +489,46 @@ function LandingScreen({ onNavigate, onStaffMode }: { onNavigate: (screen: Scree
 }
 
 // Login Screen
-function LoginScreen({ onNavigate, parentAccounts, onLogin }: { onNavigate: (screen: Screen) => void; parentAccounts: any[]; onLogin: (parentId: string) => void }) {
+// Staff credentials
+const STAFF_CREDENTIALS = [
+  { email: 'alice@sunnyview.com', password: 'cpsc481' },
+  { email: 'bob@sunnyview.com', password: 'cpsc481' },
+  { email: 'carol@sunnyview.com', password: 'cpsc481' },
+];
+
+function LoginScreen({ onNavigate, parentAccounts, onLogin, onStaffLogin }: { onNavigate: (screen: Screen) => void; parentAccounts: any[]; onLogin: (parentId: string) => void; onStaffLogin: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const handleLogin = () => {
-    setError('');
-    const account = parentAccounts.find(acc => acc.email === email && acc.password === password);
-    if (account) {
-      onLogin(account.parentId);
-      onNavigate('home');
-    } else {
-      setError('Invalid email or password');
+    const errors: string[] = [];
+    if (!email.trim()) errors.push('Email is required');
+    if (!password) errors.push('Password is required');
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
     }
+
+    setValidationErrors([]);
+
+    // Check if staff
+    const staffAccount = STAFF_CREDENTIALS.find(acc => acc.email === email && acc.password === password);
+    if (staffAccount) {
+      onStaffLogin();
+      return;
+    }
+
+    // Check if parent
+    const parentAccount = parentAccounts.find(acc => acc.email === email && acc.password === password);
+    if (parentAccount) {
+      onLogin(parentAccount.parentId);
+      onNavigate('home');
+      return;
+    }
+
+    setValidationErrors(['Invalid email or password']);
   };
 
   return (
@@ -545,9 +561,14 @@ function LoginScreen({ onNavigate, parentAccounts, onLogin }: { onNavigate: (scr
         </h2>
 
         <div className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+              <h3 className="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -605,94 +626,6 @@ function LoginScreen({ onNavigate, parentAccounts, onLogin }: { onNavigate: (scr
             className="w-full text-[#BF6A02] hover:underline text-center py-2"
           >
             Forgot Password?
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Staff Login Screen
-function StaffLoginScreen({ onNavigate, onStaffLogin }: { onNavigate: (screen: Screen) => void; onStaffLogin: () => void }) {
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleLogin = () => {
-    // In a real app, validate credentials here
-    onStaffLogin();
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8">
-        <div className="mb-6">
-          <button 
-            onClick={() => onNavigate('landing')}
-            className="w-[30px] h-[29px] hover:opacity-80 transition-opacity"
-          >
-            <BackButton />
-          </button>
-        </div>
-
-        {/* Branding on top */}
-        <div className="text-center mb-8">
-          <div className="relative inline-block mb-6">
-            <div className="w-12 h-12 absolute -top-4 -left-4">
-              <Icon />
-            </div>
-            <h1 className="text-4xl md:text-5xl relative" style={{ fontFamily: 'Angkor, cursive', color: '#000000', position: 'relative', zIndex: 1 }}>
-              SUNNYVIEW DAYCARE
-            </h1>
-          </div>
-          <img src={personLogo} alt="Person" className="w-32 h-32 mx-auto mb-6" />
-        </div>
-
-        <h2 className="text-4xl mb-8" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#191d21' }}>
-          Staff Login
-        </h2>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Email</label>
-            <input
-              type="email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#155323]"
-              placeholder="staff.email@sunnyview.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Password</label>
-            <input
-              type={showPassword ? "text" : "password"}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#155323]"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <div className="flex items-center gap-3 pl-3">
-            <button
-              onClick={() => setShowPassword(!showPassword)}
-              className={`w-4 h-4 rounded border-2 border-[#155323] flex items-center justify-center transition-all ${
-                showPassword ? 'bg-[#155323]' : 'bg-transparent'
-              }`}
-            >
-              {showPassword && (
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </button>
-            <label className="text-xs text-gray-600 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
-              Show Password
-            </label>
-          </div>
-
-          <button
-            onClick={handleLogin}
-            className="w-full bg-[#155323] hover:bg-[#0f3d1a] text-white py-4 px-6 rounded-lg transition-all shadow-lg"
-            style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '22px' }}
-          >
-            Login as Staff
           </button>
         </div>
       </div>
