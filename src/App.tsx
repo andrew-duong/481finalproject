@@ -3,12 +3,7 @@ import { Calendar, Bell, FileText, CreditCard, Home, Menu, X, ChevronRight, Chev
 import Icon from './imports/Icon';
 import BackButton from './imports/BackButton';
 import personLogo from "figma:asset/6832ab5189a31fc3a5769ff92b4f840a164ed71a.png";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./components/ui/accordion";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger,} from "./components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import StaffApp from './StaffApp';
 import { Logo } from './components/Logo';
@@ -31,21 +26,7 @@ const safeDueDate = (form: any): Date | null => {
   return isNaN(d.getTime()) ? null : d;
 };
 
-type Screen = 
-  | 'landing' 
-  | 'login' 
-  | 'register' 
-  | 'forgot-password'
-  | 'staff-login'
-  | 'home' 
-  | 'events' 
-  | 'event-details'
-  | 'my-children'
-  | 'daily-activity' 
-  | 'activity-details'
-  | 'forms' 
-  | 'form-view'
-  | 'payments';
+type Screen = | 'landing' | 'login' | 'register' | 'forgot-password'| 'staff-login'| 'home' | 'events' | 'event-details'| 'my-children'| 'daily-activity' | 'activity-details'| 'forms' | 'form-view' | 'payments';
 
 export default function App() {
   const [appMode, setAppMode] = useState<'parent' | 'staff'>('parent');
@@ -57,15 +38,21 @@ export default function App() {
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [loggedInParentId, setLoggedInParentId] = useState<string | null>(null);
 
-  // Parent accounts - one per parentId
-  const parentAccounts = [
+  // Parent accounts - using state so we can add new registrations
+  const [parentAccounts, setParentAccounts] = useState([
     { parentId: 'p1', email: 'darren@sunnyview.com', password: 'cpsc481' },
     { parentId: 'p2', email: 'lindsay@sunnyview.com', password: 'cpsc481' },
     { parentId: 'p3', email: 'george@sunnyview.com', password: 'cpsc481' },
     { parentId: 'p4', email: 'sofia@sunnyview.com', password: 'cpsc481' },
     { parentId: 'p5', email: 'joanne@sunnyview.com', password: 'cpsc481' },
     { parentId: 'p6', email: 'paula@sunnyview.com', password: 'cpsc481' },
-  ];
+  ]);
+
+  const handleRegisterAccount = (email: string, password: string, fullName: string) => {
+    const newParentId = `p${parentAccounts.length + 1}`;
+    setParentAccounts([...parentAccounts, { parentId: newParentId, email, password }]);
+    return newParentId;
+  };
 
   const handleStaffLogout = () => {
     setAppMode('parent');
@@ -81,34 +68,34 @@ export default function App() {
     setCurrentScreen('landing');
   };
 
-  // Canonical shared children list used by both Parent and Staff apps
+  // children data - shared between parent and staff views
   const children = [
     {
       childId: "c1",
       parentId: "p1",
-      name: "Noah Bennett",
+      name: "Noah Carter",
       age: 4,
-      allergies: "None",
+      allergies: "Peanuts, Tree nuts",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(403)-245-7821"
     },
     {
       childId: "c2",
       parentId: "p1",
       name: "Lucas Carter",
       age: 3,
-      allergies: "Peanuts",
+      allergies: "None",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(587)-392-4156"
     },
     {
       childId: "c3",
       parentId: "p2",
       name: "Ava Martinez",
       age: 5,
-      allergies: "None",
+      allergies: "Shellfish",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(403)-678-2943"
     },
     {
       childId: "c4",
@@ -117,7 +104,7 @@ export default function App() {
       age: 5,
       allergies: "None",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(587)-521-8734"
     },
     {
       childId: "c5",
@@ -126,34 +113,34 @@ export default function App() {
       age: 4,
       allergies: "None",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(587)-521-8734"
     },
     {
       childId: "c6",
       parentId: "p3",
       name: "Rob James",
       age: 6,
-      allergies: "None",
+      allergies: "Dairy",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(587)-521-8734"
     },
     {
       childId: "c7",
       parentId: "p4",
       name: "Sofia Patel",
       age: 4,
-      allergies: "Dairy",
+      allergies: "None",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(403)-912-3547"
     },
     {
       childId: "c8",
       parentId: "p5",
       name: "Emma Parker",
       age: 3,
-      allergies: "None",
+      allergies: "Eggs",
       medical: "N/A",
-      contact: "(888)-888-8888"
+      contact: "(587)-436-9201"
     },
     {
       childId: "c9",
@@ -162,10 +149,10 @@ export default function App() {
       age: 4,
       allergies: "None",
       medical: "Asthma",
-      contact: "(888)-888-8888"
+      contact: "(403)-584-6129"
     }
   ];
-
+  // Events data
   const [events, setEvents] = useState([
     {
       id: 1,
@@ -279,7 +266,7 @@ export default function App() {
 
   
 
-  // Activities/logs state - shared between parent and staff views
+  // Activities/logs data
   const [activities, setActivities] = useState<any[]>([]);
   React.useEffect(() => {
     if (activities.length === 0) {
@@ -407,9 +394,8 @@ export default function App() {
       ]);
     }
   }, [activities.length]);
-
+  // Forms data
   const [allForms, setAllForms] = useState([
-    // Event-linked forms (include parent fields for staff view)
     { id: 'f1', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c1', dueDate: new Date('2025-11-05'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
     { id: 'f2', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c3', dueDate: new Date('2025-11-05'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
     { id: 'f3', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c6', dueDate: new Date('2025-11-05'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
@@ -431,22 +417,20 @@ export default function App() {
 
   // Sort forms: outstanding -> pending -> completed (by due date within each status)
   const forms = [...allForms].sort((a, b) => {
-    // Status priority: outstanding (0) -> pending (1) -> completed (2)
     const statusPriority: { [key: string]: number } = { outstanding: 0, pending: 1, completed: 2 };
     const priorityDiff = (statusPriority[a.status] ?? 999) - (statusPriority[b.status] ?? 999);
     if (priorityDiff !== 0) return priorityDiff;
-    // Within same status, sort by due date
     return (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0);
   });
 
   const [allPayments, setAllPayments] = useState([
-    // Tuition payments (eventId: null) - due on the 1st of each month
+    // Tuition fees
     { paymentId: 'p1', childId: 'c6', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
     { paymentId: 'p2', childId: 'c8', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
     { paymentId: 'p3', childId: 'c3', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
     { paymentId: 'p4', childId: 'c7', amount: 850.00, description: 'Monthly Tuition - November 2025', status: 'outstanding', eventId: null, dueDate: new Date('2025-11-01') },
     
-    // Event-related fees (due same day as form)
+    // Eventy fees
     { paymentId: 'p5', childId: 'c1', amount: 35.00, description: 'Drumheller Field Trip Fee', status: 'outstanding', eventId: 1, dueDate: new Date('2025-11-05') },
     { paymentId: 'p6', childId: 'c3', amount: 35.00, description: 'Drumheller Field Trip Fee', status: 'pending', eventId: 1, dueDate: new Date('2025-11-05') },
     { paymentId: 'p7', childId: 'c6', amount: 35.00, description: 'Drumheller Field Trip Fee', status: 'completed', eventId: 1, dueDate: new Date('2025-11-05') },
@@ -492,7 +476,7 @@ export default function App() {
       case 'login':
         return <LoginScreen onNavigate={navigate} parentAccounts={parentAccounts} onLogin={handleParentLogin} onStaffLogin={() => setAppMode('staff')} />;
       case 'register':
-        return <RegisterScreen onNavigate={navigate} />;
+        return <RegisterScreen onNavigate={navigate} onRegister={handleRegisterAccount} onLogin={handleParentLogin} />;
       case 'forgot-password':
         return <ForgotPasswordScreen onNavigate={navigate} />;
 
@@ -718,8 +702,50 @@ function LoginScreen({ onNavigate, parentAccounts, onLogin, onStaffLogin }: { on
 }
 
 // Register Screen
-function RegisterScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }) {
+function RegisterScreen({ onNavigate, onRegister, onLogin }: { onNavigate: (screen: Screen) => void; onRegister: (email: string, password: string, fullName: string) => string; onLogin: (parentId: string) => void }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  const handleRegister = () => {
+    const errors: string[] = [];
+
+    if (!fullName.trim()) {
+      errors.push('Full name is required');
+    }
+
+    if (!email.trim()) {
+      errors.push('Email is required');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Please enter a valid email address');
+    }
+
+    if (!password) {
+      errors.push('Password is required');
+    } else if (password.length < 6) {
+      errors.push('Password must be at least 6 characters');
+    }
+
+    if (!confirmPassword) {
+      errors.push('Please confirm your password');
+    } else if (password !== confirmPassword) {
+      errors.push('Passwords do not match');
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    // Register the new account and log them in
+    const newParentId = onRegister(email, password, fullName);
+    setValidationErrors([]);
+    onLogin(newParentId);
+    onNavigate('home');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -752,36 +778,44 @@ function RegisterScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Full Name</label>
+            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Full Name <span className="text-red-500">*</span></label>
             <input
               type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="John Doe"
             />
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Email</label>
+            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Email <span className="text-red-500">*</span></label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="your.email@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Password</label>
+            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Password <span className="text-red-500">*</span></label>
             <input
               type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="••••••••"
             />
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Confirm Password</label>
+            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Confirm Password <span className="text-red-500">*</span></label>
             <input
               type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="••••••••"
             />
@@ -805,8 +839,19 @@ function RegisterScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }
             </label>
           </div>
 
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+              <p className="text-red-800 font-semibold mb-2">Please fix the following errors:</p>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <button
-            onClick={() => onNavigate('home')}
+            onClick={handleRegister}
             className="w-full bg-[#191d21] hover:bg-[#2a2e32] text-white py-4 px-6 rounded-lg transition-all shadow-lg"
             style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '22px' }}
           >
@@ -820,6 +865,57 @@ function RegisterScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }
 
 // Forgot Password Screen
 function ForgotPasswordScreen({ onNavigate }: { onNavigate: (screen: Screen) => void }) {
+  const [email, setEmail] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  const handleSendResetLink = () => {
+    const errors: string[] = [];
+
+    if (!email.trim()) {
+      errors.push('Email is required');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Please enter a valid email address');
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    setValidationErrors([]);
+    setShowConfirmation(true);
+  };
+
+  if (showConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl mb-4" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#191d21' }}>
+              Reset Link Sent!
+            </h2>
+            <p className="text-gray-600 mb-6">
+              We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and follow the instructions to reset your password.
+            </p>
+            <button
+              onClick={() => onNavigate('login')}
+              className="w-full bg-[#155323] hover:bg-[#0f3d1a] text-white py-4 px-6 rounded-lg transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '18px' }}
+            >
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8">
@@ -852,16 +948,29 @@ function ForgotPasswordScreen({ onNavigate }: { onNavigate: (screen: Screen) => 
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Email</label>
+            <label className="block text-sm mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>Email <span className="text-red-500">*</span></label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
               placeholder="your.email@example.com"
             />
           </div>
 
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+              <p className="text-red-800 font-semibold mb-2">Please fix the following errors:</p>
+              <ul className="list-disc list-inside text-red-700 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <button
-            onClick={() => onNavigate('login')}
+            onClick={handleSendResetLink}
             className="w-full bg-[#191d21] hover:bg-[#2a2e32] text-white py-4 px-6 rounded-lg transition-all shadow-lg"
             style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '22px' }}
           >
