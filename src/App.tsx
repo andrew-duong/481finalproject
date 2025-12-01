@@ -1265,9 +1265,9 @@ function MyChildrenScreen({ onNavigate, childrenList, loggedInParentId, onLogout
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {children.map(child => (
-            <div 
+              <div 
               key={child.childId} 
-              onClick={() => onNavigate('daily-activity', child.childId)}
+              onClick={() => onNavigate('daily-activity', child.childId)}  // Changed from child.name
               className="bg-gradient-to-br from-[#155323] to-[#0d3a18] text-white rounded-3xl p-8 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
             >
               <div className="flex items-center justify-between">
@@ -1295,11 +1295,11 @@ function MyChildrenScreen({ onNavigate, childrenList, loggedInParentId, onLogout
 function DailyActivityScreen({ activities, selectedChild, onNavigate, children }: { activities: any[]; selectedChild: string; onNavigate: (screen: Screen, data?: any) => void; children: any[] }) {
   const [showMenu, setShowMenu] = useState(false);
 
-  // Look up the child's name
+  // selectedChild is now a childId, find the child object
   const child = children.find(c => c.childId === selectedChild);
   const childName = child?.name || 'Child';
 
-  // Filter activities where the selected child participated (selectedChild is now childId)
+  // Filter activities where the selected child participated
   const childActivities = (Array.isArray(activities) ? activities : []).filter((a: any) =>
     Array.isArray(a.children) && a.children.some((c: any) => c.childId === selectedChild && c.selected)
   );
@@ -1390,7 +1390,6 @@ function DailyActivityScreen({ activities, selectedChild, onNavigate, children }
     </div>
   );
 }
-
 // Activity Details Screen
 function ActivityDetailsScreen({ activity, onNavigate }: { activity: any; onNavigate: (screen: Screen) => void }) {
   return (
