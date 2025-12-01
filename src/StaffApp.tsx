@@ -102,17 +102,23 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+                {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={onLogout}
+                className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -357,17 +363,23 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+                {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={onLogout}
+                className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -705,7 +717,7 @@ function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout
             </button>
             <button 
               onClick={onLogout}
-              className="hidden md:block bg-[#BF6A02] hover:bg-[#A55A02] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
               style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
             >
               Logout
@@ -714,7 +726,7 @@ function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout
 
           {showMenu && (
             <div className="md:hidden mb-4">
-              <button onClick={onLogout} className="bg-[#BF6A02] hover:bg-[#A55A02] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -816,18 +828,24 @@ return (
         {/* Logo + Menu */}
         <div className="flex justify-between items-center mb-6">
           <Logo size="small" />
-          <button onClick={() => setShowMenu(!showMenu)}>
-            {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <button
+              onClick={onLogout}
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Dropdown Menu */}
         {showMenu && (
-          <div className="mb-4 space-y-2">
-            <button
-              onClick={onLogout}
-              className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-            >
+          <div className="md:hidden mb-4">
+            <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
               Logout
             </button>
           </div>
@@ -931,17 +949,23 @@ function StaffEventsScreen({ events, onNavigate, onLogout }: { events: any[]; on
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+                {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={onLogout}
+                className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -1014,17 +1038,23 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout, childrenList, on
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+                {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={onLogout}
+                className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -1346,17 +1376,23 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+                {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={onLogout}
+                className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -1696,7 +1732,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
                   <div className="flex items-center gap-2">
                   <button
                     onClick={() => alert('PDF download would start here')}
-                    className="bg-[#BF6A02] hover:bg-[#A55A02] text-white px-4 py-2 rounded-lg"
+                    className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-4 py-2 rounded-lg"
                   >
                     Download
                   </button>
@@ -1806,17 +1842,23 @@ function StaffViewLogsScreen({ onNavigate, activities, onLogout, onDelete }: { o
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
-              {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
+                {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <button 
+                onClick={onLogout}
+                className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -2566,7 +2608,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms }: 
 
                   <button
                     onClick={() => alert("PDF download would start here")}
-                    className="flex items-center gap-2 bg-[#BF6A02] hover:bg-[#A55A02] text-white py-3 px-6 rounded-lg transition-all shadow-md"
+                    className="flex items-center gap-2 bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-lg transition-all shadow-md"
                     style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
                   >
                     <svg
