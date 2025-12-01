@@ -1021,15 +1021,16 @@ function HomeScreen({ onNavigate, events, children, loggedInParentId, onLogout }
             </button>
             <button 
               onClick={onLogout}
-              className="hidden md:block text-gray-600 hover:text-gray-900"
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
             >
               Logout
             </button>
           </div>
 
           {showMenu && (
-            <div className="md:hidden mt-4 space-y-2">
-              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+            <div className="md:hidden mt-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -1187,14 +1188,21 @@ function EventsScreen({ events, children, onNavigate, loggedInParentId, onLogout
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
+            <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
               {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <button 
+              onClick={onLogout}
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+            >
+              Logout
             </button>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -1421,14 +1429,21 @@ function MyChildrenScreen({ onNavigate, childrenList, loggedInParentId, onLogout
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
+            <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
               {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <button 
+              onClick={onLogout}
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+            >
+              Logout
             </button>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -1652,14 +1667,21 @@ function FormsScreen({ forms, children, onNavigate, loggedInParentId, onLogout }
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
+            <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
               {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <button 
+              onClick={onLogout}
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+            >
+              Logout
             </button>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -2055,14 +2077,21 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
+            <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
               {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <button 
+              onClick={onLogout}
+              className="hidden md:block bg-[#155323] hover:bg-[#0f3d1a] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+            >
+              Logout
             </button>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button onClick={onLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded">
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>

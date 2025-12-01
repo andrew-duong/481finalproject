@@ -52,7 +52,7 @@ function StaffBottomNav({ current, onNavigate }: { current: string; onNavigate: 
 // Staff Home Screen - Shows all events
 function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; events: any[]; onLogout?: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 11)); // November 11, 2025
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
@@ -156,7 +156,8 @@ function StaffHomeScreen({ onNavigate, events, onLogout }: { onNavigate: (screen
             
             {Array.from({ length: daysInMonth }).map((_, index) => {
               const day = index + 1;
-              const isToday = day === 11 && month === 10 && year === 2025;
+              const today = new Date();
+              const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
               const hasEvent = hasEventOnDate(day);
               
               return (
@@ -237,10 +238,10 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
   
 
   const [activityType, setActivityType] = useState('');
-  const [startHour, setStartHour] = useState('00');
+  const [startHour, setStartHour] = useState('01');
   const [startMinute, setStartMinute] = useState('00');
   const [startPeriod, setStartPeriod] = useState('AM');
-  const [endHour, setEndHour] = useState('00');
+  const [endHour, setEndHour] = useState('01');
   const [endMinute, setEndMinute] = useState('00');
   const [endPeriod, setEndPeriod] = useState('PM');
   const [notes, setNotes] = useState('');
@@ -299,6 +300,8 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
     }
     if (!startHour || !startMinute) {
       errors.push('Please enter a start time');
+    } else if (startHour === '00' && startMinute === '00') {
+      errors.push('Start time cannot be 00:00');
     }
     if (!endHour || !endMinute) {
       errors.push('Please enter an end time');
@@ -697,17 +700,21 @@ function StaffAttendanceScreen({ onNavigate, attendance, setAttendance, onLogout
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <Logo size="small" />
-            <button onClick={() => setShowMenu(!showMenu)}>
+            <button onClick={() => setShowMenu(!showMenu)} className="md:hidden">
               {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <button 
+              onClick={onLogout}
+              className="hidden md:block bg-[#BF6A02] hover:bg-[#A55A02] text-white py-2 px-6 rounded-xl transition-all shadow-lg"
+              style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
+            >
+              Logout
             </button>
           </div>
 
           {showMenu && (
-            <div className="mb-4 space-y-2">
-              <button 
-                onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
-              >
+            <div className="md:hidden mb-4">
+              <button onClick={onLogout} className="bg-[#BF6A02] hover:bg-[#A55A02] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                 Logout
               </button>
             </div>
@@ -998,7 +1005,7 @@ function StaffEventsScreen({ events, onNavigate, onLogout }: { events: any[]; on
 }
 
 // Staff Event Details Screen
-function StaffEventDetailsScreen({ event, onNavigate, onLogout, childrenList }: { event: any; onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void; childrenList: Child[] }) {
+function StaffEventDetailsScreen({ event, onNavigate, onLogout, childrenList, onDeleteEvent }: { event: any; onNavigate: (screen: StaffScreen, data?: any) => void; onLogout?: () => void; childrenList: Child[]; onDeleteEvent?: (id: number) => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -1046,6 +1053,9 @@ function StaffEventDetailsScreen({ event, onNavigate, onLogout, childrenList }: 
             <button 
               onClick={() => {
                 if (confirm('Are you sure you want to delete this event?')) {
+                  if (event?.id && typeof onDeleteEvent === 'function') {
+                    onDeleteEvent(event.id);
+                  }
                   onNavigate('staff-events');
                 }
               }}
@@ -1238,6 +1248,8 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
     }
     if (!startHour || !startMinute) {
       errors.push('Please enter a start time');
+    } else if (startHour === '00' && startMinute === '00') {
+      errors.push('Start time cannot be 00:00');
     }
     if (!endHour || !endMinute) {
       errors.push('Please enter an end time');
@@ -1287,6 +1299,8 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
     }
     if (!startHour || !startMinute) {
       errors.push('Please enter a start time');
+    } else if (startHour === '00' && startMinute === '00') {
+      errors.push('Start time cannot be 00:00');
     }
     if (!endHour || !endMinute) {
       errors.push('Please enter an end time');
@@ -1783,7 +1797,7 @@ function StaffAddEditEventScreen({ event, onNavigate, mode, onAddEvent, onUpdate
 }
 
 // Staff View Logs Screen
-function StaffViewLogsScreen({ onNavigate, activities, onLogout }: { onNavigate: (screen: StaffScreen, data?: any) => void; activities: any[]; onLogout?: () => void }) {
+function StaffViewLogsScreen({ onNavigate, activities, onLogout, onDelete }: { onNavigate: (screen: StaffScreen, data?: any) => void; activities: any[]; onLogout?: () => void; onDelete: (id: number) => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -1849,7 +1863,7 @@ function StaffViewLogsScreen({ onNavigate, activities, onLogout }: { onNavigate:
                   <button
                     onClick={() => {
                       if (confirm('Are you sure you want to delete this activity?')) {
-                        // Delete activity logic here
+                        onDelete(log.id);
                       }
                     }}
                     className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl transition-colors"
@@ -1887,12 +1901,12 @@ function StaffViewLogsScreen({ onNavigate, activities, onLogout }: { onNavigate:
 }
 
 // Staff Edit Log Screen
-function StaffEditLogScreen({ onNavigate, log, onLogout, childrenList }: { onNavigate: (screen: StaffScreen) => void; log: any; onLogout?: () => void; childrenList: Child[] }) {
+function StaffEditLogScreen({ onNavigate, log, onLogout, childrenList, onUpdate }: { onNavigate: (screen: StaffScreen) => void; log: any; onLogout?: () => void; childrenList: Child[]; onUpdate: (updated: any) => void }) {
   const [showMenu, setShowMenu] = useState(false);
   const [activityName, setActivityName] = useState(log?.activityName || '');
-  const [startHour, setStartHour] = useState(log?.startHour || '12');
+  const [startHour, setStartHour] = useState(log?.startHour || '01');
   const [startMinute, setStartMinute] = useState(log?.startMinute || '00');
-  const [startPeriod, setStartPeriod] = useState(log?.startPeriod || 'PM');
+  const [startPeriod, setStartPeriod] = useState(log?.startPeriod || 'AM');
   const [endHour, setEndHour] = useState(log?.endHour || '01');
   const [endMinute, setEndMinute] = useState(log?.endMinute || '00');
   const [endPeriod, setEndPeriod] = useState(log?.endPeriod || 'PM');
@@ -2262,7 +2276,36 @@ function StaffEditLogScreen({ onNavigate, log, onLogout, childrenList }: { onNav
               Cancel
             </button>
             <button 
-              onClick={() => onNavigate('staff-view-logs')}
+              onClick={() => {
+                const startTime = `${startHour}:${startMinute}${startPeriod.toLowerCase()}`;
+                const endTime = `${endHour}:${endMinute}${endPeriod.toLowerCase()}`;
+                const childrenData = childrenList.map((child: any) => {
+                  const selected = selectedChildren.includes(child.name);
+                  const noteObj = behavioralNotes.find((n) => n.child === child.name);
+                  return {
+                    childId: child.childId,
+                    name: child.name,
+                    selected,
+                    behavioralNote: noteObj ? noteObj.note : ''
+                  };
+                });
+                const updatedLog = {
+                  id: log?.id,
+                  activityName,
+                  startTime,
+                  endTime,
+                  startHour,
+                  startMinute,
+                  startPeriod,
+                  endHour,
+                  endMinute,
+                  endPeriod,
+                  notes,
+                  children: childrenData
+                };
+                onUpdate(updatedLog);
+                onNavigate('staff-view-logs');
+              }}
               className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-12 py-3 rounded-xl transition-colors whitespace-nowrap"
               style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
             >
@@ -3164,62 +3207,6 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
     Object.fromEntries(childrenList.map(c => [c.childId, false])) as { [key: string]: boolean }
   );
 
-// Initialize activities with sample data if empty
-React.useEffect(() => {
-  if (activities.length === 0) {
-    setActivities([
-  { 
-    id: 1, 
-    activityName: 'Nap Time', 
-    startTime: '12:00pm', 
-    endTime: '1:00pm',
-    startHour: '12',
-    startMinute: '00',
-    startPeriod: 'PM',
-    endHour: '01',
-    endMinute: '00',
-    endPeriod: 'PM',
-    notes: 'All children rested well',
-    children: [
-      { childId: 'c1', name: 'Noah Bennett', selected: true, behavioralNote: 'Slept peacefully for the full hour' },
-      { childId: 'c2', name: 'Lucas Carter', selected: true, behavioralNote: 'Had difficulty settling down initially' },
-      { childId: 'c3', name: 'Ava Martinez', selected: true, behavioralNote: 'Fell asleep quickly' },
-      { childId: 'c4', name: 'Alex James', selected: true, behavioralNote: '' },
-      { childId: 'c5', name: 'Amy James', selected: true, behavioralNote: '' },
-      { childId: 'c6', name: 'Rob James', selected: true, behavioralNote: 'Woke up after 30 minutes' },
-      { childId: 'c7', name: 'Sofia Patel', selected: true, behavioralNote: '' },
-      { childId: 'c8', name: 'Emma Parker', selected: true, behavioralNote: 'Very calm and relaxed' },
-      { childId: 'c9', name: 'Liam Thompson', selected: true, behavioralNote: '' },
-    ]
-  },
-  { 
-    id: 2, 
-    activityName: 'Lunch', 
-    startTime: '11:00am', 
-    endTime: '12:00pm',
-    startHour: '11',
-    startMinute: '00',
-    startPeriod: 'AM',
-    endHour: '12',
-    endMinute: '00',
-    endPeriod: 'PM',
-    notes: 'Served pasta and vegetables',
-    children: [
-      { childId: 'c1', name: 'Noah Bennett', selected: true, behavioralNote: 'Ate everything on plate' },
-      { childId: 'c2', name: 'Lucas Carter', selected: true, behavioralNote: 'Did not like vegetables' },
-      { childId: 'c3', name: 'Ava Martinez', selected: true, behavioralNote: 'Asked for seconds' },
-      { childId: 'c4', name: 'Alex James', selected: true, behavioralNote: '' },
-      { childId: 'c5', name: 'Amy James', selected: true, behavioralNote: '' },
-      { childId: 'c6', name: 'Rob James', selected: true, behavioralNote: 'Good table manners' },
-      { childId: 'c7', name: 'Sofia Patel', selected: true, behavioralNote: '' },
-      { childId: 'c8', name: 'Emma Parker', selected: true, behavioralNote: '' },
-      { childId: 'c9', name: 'Liam Thompson', selected: true, behavioralNote: 'Spilled water but cleaned up nicely' },
-    ]
-  },
-]);
-  }
-}, [activities.length, setActivities]);
-
   const [selectedLog, setSelectedLog] = useState<any>(null);
 
   const addActivity = (logData: any) => {
@@ -3228,6 +3215,16 @@ React.useEffect(() => {
       ...logData
     };
     setActivities([newLog, ...activities]);
+  };
+
+  const deleteActivity = (id: number) => {
+    const next = (Array.isArray(activities) ? activities : []).filter((a: any) => a.id !== id);
+    setActivities(next);
+  };
+
+  const updateActivity = (updated: any) => {
+    const next = (Array.isArray(activities) ? activities : []).map((a: any) => (a.id === updated.id ? { ...a, ...updated } : a));
+    setActivities(next);
   };
 
   const addEvent = (eventData: any) => {
@@ -3334,6 +3331,29 @@ React.useEffect(() => {
     }
   };
 
+  const deleteEvent = (id: number) => {
+    const nextEvents = (Array.isArray(events) ? events : []).filter((e: any) => e.id !== id);
+    setEvents(nextEvents);
+
+    // remove any forms associated with this event
+    if (typeof setForms === 'function') {
+      const prevForms = Array.isArray(forms) ? forms : [];
+      const filtered = prevForms.filter((f: any) => f.eventId !== id);
+      setForms(filtered);
+    }
+
+    // remove any payments/fees associated with this event
+    if (typeof setPayments === 'function') {
+      const prevPayments = Array.isArray(payments) ? payments : [];
+      const filteredPayments = prevPayments.filter((p: any) => p.eventId !== id);
+      setPayments(filteredPayments);
+    }
+
+    if (selectedEvent?.id === id) {
+      setSelectedEvent(null);
+    }
+  };
+
   const navigate = (screen: StaffScreen, data?: any) => {
     setCurrentScreen(screen);
     if (screen === 'staff-event-details' || screen === 'staff-edit-event') setSelectedEvent(data);
@@ -3354,15 +3374,15 @@ React.useEffect(() => {
       case 'staff-events':
         return <StaffEventsScreen events={events} onNavigate={navigate} onLogout={onLogout} />;
       case 'staff-event-details':
-        return <StaffEventDetailsScreen event={selectedEvent} onNavigate={navigate} onLogout={onLogout} childrenList={childrenList} />;
+        return <StaffEventDetailsScreen event={selectedEvent} onNavigate={navigate} onLogout={onLogout} childrenList={childrenList} onDeleteEvent={deleteEvent} />;
       case 'staff-add-event':
         return <StaffAddEditEventScreen onNavigate={navigate} mode="add" onAddEvent={addEvent} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-edit-event':
         return <StaffAddEditEventScreen event={selectedEvent} onNavigate={navigate} mode="edit" onAddEvent={addEvent} onUpdateEvent={updateEvent} onLogout={onLogout} childrenList={childrenList} />;
       case 'staff-view-logs':
-        return <StaffViewLogsScreen onNavigate={navigate} activities={activities} onLogout={onLogout} />;
+        return <StaffViewLogsScreen onNavigate={navigate} activities={activities} onLogout={onLogout} onDelete={deleteActivity} />;
       case 'staff-edit-log':
-        return <StaffEditLogScreen onNavigate={navigate} log={selectedLog} onLogout={onLogout} childrenList={childrenList} />;
+        return <StaffEditLogScreen onNavigate={navigate} log={selectedLog} onLogout={onLogout} childrenList={childrenList} onUpdate={updateActivity} />;
       case 'staff-forms':
         return <StaffFormsScreen onNavigate={navigate} onLogout={onLogout} forms={forms} childrenList={childrenList} />;
       case 'staff-form-detail':
