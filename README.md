@@ -10,9 +10,9 @@
   Run `npm run dev` to start the development server.
   
   Staff logins:
-  alice@sunnyview.com / staffpass123
-  bob@sunnyview.com / staffpass456
-  carol@sunnyview.com / staffpass789
+  alice@sunnyview.com / cpsc481
+  bob@sunnyview.com / cpsc481
+  carol@sunnyview.com / cpsc481
 
   Parent logins:
   darren@sunnyview.com / cpsc481 
