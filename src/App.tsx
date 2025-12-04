@@ -397,20 +397,20 @@ export default function App() {
   // Forms data
   const [allForms, setAllForms] = useState([
     { id: 'f1', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c1', dueDate: new Date('2025-11-05'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f2', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c3', dueDate: new Date('2025-11-05'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f3', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c6', dueDate: new Date('2025-11-05'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f2', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c3', dueDate: new Date('2025-11-05'), status: 'pending', parentName: 'Lindsay Martinez', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f3', title: 'Drumheller Field Trip Permission Form', eventId: 1, childId: 'c6', dueDate: new Date('2025-11-05'), status: 'completed', parentName: 'George James', emergencyContact: '', notes: '', signature: '' },
     { id: 'f4', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c2', dueDate: new Date('2025-11-12'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f5', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c4', dueDate: new Date('2025-11-12'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f5', title: 'Calgary Zoo Visit Permission Form', eventId: 2, childId: 'c4', dueDate: new Date('2025-11-12'), status: 'pending', parentName: 'George James', emergencyContact: '', notes: '', signature: '' },
     { id: 'f6', title: 'Telus Spark Science Center Permission Form', eventId: 3, childId: 'c5', dueDate: new Date('2025-11-19'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f7', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c6', dueDate: new Date('2025-12-01'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f8', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c7', dueDate: new Date('2025-12-01'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f7', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c6', dueDate: new Date('2025-12-01'), status: 'pending', parentName: 'George James', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f8', title: 'Holiday Concert Participation Form', eventId: 4, childId: 'c7', dueDate: new Date('2025-12-01'), status: 'completed', parentName: 'Sofia Patel', emergencyContact: '', notes: '', signature: '' },
     { id: 'f9', title: 'Winter Party Permission Form', eventId: 5, childId: 'c1', dueDate: new Date('2025-12-15'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f10', title: 'Winter Party Permission Form', eventId: 5, childId: 'c2', dueDate: new Date('2025-12-15'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f11', title: 'Winter Party Permission Form', eventId: 5, childId: 'c3', dueDate: new Date('2025-12-15'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f12', title: 'Winter Party Permission Form', eventId: 5, childId: 'c4', dueDate: new Date('2025-12-15'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f10', title: 'Winter Party Permission Form', eventId: 5, childId: 'c2', dueDate: new Date('2025-12-15'), status: 'pending', parentName: 'Darren Carter', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f11', title: 'Winter Party Permission Form', eventId: 5, childId: 'c3', dueDate: new Date('2025-12-15'), status: 'completed', parentName: 'Lindsay Martinez', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f12', title: 'Winter Party Permission Form', eventId: 5, childId: 'c4', dueDate: new Date('2025-12-15'), status: 'pending', parentName: 'George James', emergencyContact: '', notes: '', signature: '' },
     { id: 'f13', title: 'Calgary Zoo Field Trip Permission Form', eventId: 6, childId: 'c6', dueDate: new Date('2025-12-10'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f14', title: 'Telus Spark Field Trip Permission Form', eventId: 7, childId: 'c6', dueDate: new Date('2025-12-23'), status: 'pending', parentName: '', emergencyContact: '', notes: '', signature: '' },
-    { id: 'f15', title: 'Science Fair Permission Form', eventId: 8, childId: 'c8', dueDate: new Date('2025-11-10'), status: 'completed', parentName: '', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f14', title: 'Telus Spark Field Trip Permission Form', eventId: 7, childId: 'c6', dueDate: new Date('2025-12-23'), status: 'pending', parentName: 'George James', emergencyContact: '', notes: '', signature: '' },
+    { id: 'f15', title: 'Science Fair Permission Form', eventId: 8, childId: 'c8', dueDate: new Date('2025-11-10'), status: 'completed', parentName: 'Joanne Parker', emergencyContact: '', notes: '', signature: '' },
     { id: 'f16', title: 'Art Gallery Visit Permission Form', eventId: 9, childId: 'c8', dueDate: new Date('2025-11-28'), status: 'outstanding', parentName: '', emergencyContact: '', notes: '', signature: '' },
   ]);
 
@@ -566,6 +566,7 @@ const STAFF_CREDENTIALS = [
 
 function LoginScreen({ onNavigate, parentAccounts, onLogin, onStaffLogin }: { onNavigate: (screen: Screen) => void; parentAccounts: any[]; onLogin: (parentId: string) => void; onStaffLogin: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [keepMeLoggedIn, setKeepMeLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -678,6 +679,24 @@ function LoginScreen({ onNavigate, parentAccounts, onLogin, onStaffLogin }: { on
             </button>
             <label className="text-xs text-gray-600 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
               Show Password
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3 pl-3">
+            <button
+              onClick={() => setKeepMeLoggedIn(!keepMeLoggedIn)}
+              className={`w-4 h-4 rounded border-2 border-[#155323] flex items-center justify-center transition-all ${
+                keepMeLoggedIn ? 'bg-[#155323]' : 'bg-transparent'
+              }`}
+            >
+              {keepMeLoggedIn && (
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+            <label className="text-xs text-gray-600 cursor-pointer" onClick={() => setKeepMeLoggedIn(!keepMeLoggedIn)}>
+              Keep me logged in
             </label>
           </div>
 
@@ -1284,14 +1303,14 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
   // Find the child object for the selected child
   const child = children.find(c => c.name === selectedChild);
   
-  // Find the corresponding form for this event and child with outstanding status
+  // Find the corresponding form for this event and child
   const eventForm = event && child ? forms.find(form => 
-    form.eventId === event.id && form.childId === child.childId && form.status === 'outstanding'
+    form.eventId === event.id && form.childId === child.childId
   ) : null;
 
-  // Find the corresponding payment for this event and child with outstanding status
+  // Find the corresponding payment for this event and child
   const eventPayment = event && child ? payments.find((payment: any) => 
-    payment.eventId === event.id && payment.childId === child.childId && payment.status === 'outstanding'
+    payment.eventId === event.id && payment.childId === child.childId
   ) : null;
 
   return (
@@ -1378,7 +1397,7 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
           </div>
 
           {/* Notes */}
-          <div className="mb-8">
+          <div className="mb-6">
             <h3 className="text-xl mb-2" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
               Notes:
             </h3>
@@ -1387,9 +1406,33 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
             </p>
           </div>
 
+          {/* Fee */}
+          {eventPayment && (
+            <div className="mb-8 bg-white rounded-xl p-6 border-l-4 border-[#BF6A02]">
+              <h3 className="text-xl mb-3" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+                Event Fee:
+              </h3>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-gray-600 mb-2">{eventPayment.description}</p>
+                  <p className="text-3xl font-semibold text-[#BF6A02]">
+                    ${eventPayment.amount.toFixed(2)}
+                  </p>
+                </div>
+                <span className={`px-4 py-2 rounded-full text-sm font-semibold`}
+                  style={{
+                    backgroundColor: eventPayment.status === 'completed' ? '#10b981' : eventPayment.status === 'pending' ? '#eab308' : '#ef4444',
+                    color: 'white'
+                  }}>
+                  {eventPayment.status.charAt(0).toUpperCase() + eventPayment.status.slice(1)}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="flex gap-4 justify-center">
-            {eventForm && (
+            {eventForm && eventForm.status === 'outstanding' && (
               <button
                 onClick={() => onNavigate('form-view', eventForm)}
                 className="bg-[rgba(191,106,2,0.76)] hover:bg-[rgba(191,106,2,0.9)] text-white rounded-xl transition-all flex items-center justify-center"
@@ -1398,13 +1441,31 @@ function EventDetailsScreen({ event, forms, payments, selectedChild, children, o
                 Form
               </button>
             )}
-            {eventPayment && (
+            {eventForm && (eventForm.status === 'completed' || eventForm.status === 'pending') && (
+              <button
+                disabled
+                className="bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed flex items-center justify-center"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
+              >
+                Filled
+              </button>
+            )}
+            {eventPayment && eventPayment.status === 'outstanding' && (
               <button
                 onClick={() => onNavigate('payments', eventPayment)}
                 className="bg-[#009951] hover:bg-[#007a40] text-white rounded-xl transition-all flex items-center justify-center"
                 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
               >
                 Pay Now
+              </button>
+            )}
+            {eventPayment && (eventPayment.status === 'completed' || eventPayment.status === 'pending') && (
+              <button
+                disabled
+                className="bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed flex items-center justify-center"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, width: '101px', height: '42px' }}
+              >
+                Paid
               </button>
             )}
           </div>
@@ -1745,6 +1806,15 @@ function FormsScreen({ forms, children, onNavigate, loggedInParentId, onLogout }
                           style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, height: '42px' }}
                         >
                           Fill Out
+                        </button>
+                      )}
+                      {(form.status === 'completed' || form.status === 'pending') && (
+                        <button
+                          disabled
+                          className="w-full bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed whitespace-nowrap flex items-center justify-center"
+                          style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, height: '42px' }}
+                        >
+                          Filled
                         </button>
                       )}
                     </div>
@@ -2162,6 +2232,15 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
                             Pay Now
                           </button>
                         )}
+                        {(payment.status === 'completed' || payment.status === 'pending') && (
+                          <button
+                            disabled
+                            className="bg-gray-300 text-gray-500 py-3 px-6 rounded-xl cursor-not-allowed whitespace-nowrap flex items-center justify-center"
+                            style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+                          >
+                            Paid
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -2330,7 +2409,7 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
               Payment Successful!
             </h2>
             
-            <p className="text-gray-600 mb-6">Your payment of {selectedPayment.amount} for {selectedPayment.name} has been processed successfully.</p>
+            <p className="text-gray-600 mb-6">Your payment of ${selectedPayment.amount.toFixed(2)} for {selectedPayment.name} has been processed successfully.</p>
             
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left space-y-2">
               <div className="flex justify-between">
@@ -2339,7 +2418,7 @@ function PaymentsScreen({ onNavigate, payments, children, allPayments, setAllPay
               </div>
               <div className="flex justify-between">
                 <p className="text-sm text-gray-600">Amount Paid</p>
-                <p className="font-semibold text-[#155323]">{selectedPayment.amount}</p>
+                <p className="font-semibold text-[#155323]">${selectedPayment.amount.toFixed(2)}</p>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-2">
                 <p className="text-sm text-gray-600">Transaction ID</p>

@@ -243,17 +243,63 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
 
   
 
+  
+
+  // Get current time for initial values
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    let hour12 = hours % 12;
+    if (hour12 === 0) hour12 = 12;
+    return {
+      hour: String(hour12).padStart(2, '0'),
+      period
+    };
+  };
+
+  const currentTime = getCurrentTime();
+
   const [activityType, setActivityType] = useState('');
-  const [startHour, setStartHour] = useState('01');
+  const [customActivity, setCustomActivity] = useState('');
+  const [startHour, setStartHour] = useState(currentTime.hour);
   const [startMinute, setStartMinute] = useState('00');
-  const [startPeriod, setStartPeriod] = useState('AM');
-  const [endHour, setEndHour] = useState('01');
+  const [startPeriod, setStartPeriod] = useState(currentTime.period);
+  const [endHour, setEndHour] = useState(currentTime.hour);
   const [endMinute, setEndMinute] = useState('00');
-  const [endPeriod, setEndPeriod] = useState('PM');
+  const [endPeriod, setEndPeriod] = useState(currentTime.period);
   const [notes, setNotes] = useState('');
   const [behavioralNotes, setBehavioralNotes] = useState<{ childId: string; note: string }[]>([]);
   const [showChildrenDropdown, setShowChildrenDropdown] = useState(false);
   const [showBehavioralChildDropdown, setShowBehavioralChildDropdown] = useState(false);
+
+  // Floor start time whenever minute changes
+  React.useEffect(() => {
+    if (startMinute !== '00') {
+      setStartMinute('00');
+    }
+  }, [startHour, startMinute, startPeriod]);
+
+  // Ceiling end time whenever minute changes
+  React.useEffect(() => {
+    const minuteNum = parseInt(endMinute);
+    if (minuteNum > 0) {
+      let hourNum = parseInt(endHour);
+      hourNum += 1;
+      
+      let newPeriod = endPeriod;
+      if (hourNum > 12) {
+        hourNum = 1;
+        newPeriod = endPeriod === 'AM' ? 'PM' : 'AM';
+      }
+      
+      setEndHour(String(hourNum).padStart(2, '0'));
+      setEndMinute('00');
+      if (newPeriod !== endPeriod) {
+        setEndPeriod(newPeriod);
+      }
+    }
+  }, [endHour, endMinute, endPeriod]);
 
   const handleChildSelection = (child: string, checked: boolean) => {
     if (checked) {
@@ -302,7 +348,10 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
       errors.push('Please select at least one child');
     }
     if (!activityType.trim()) {
-      errors.push('Please enter an activity name');
+      errors.push('Please select an activity');
+    }
+    if (activityType === 'Other' && !customActivity.trim()) {
+      errors.push('Please enter a custom activity name');
     }
     if (!startHour || !startMinute) {
       errors.push('Please enter a start time');
@@ -339,7 +388,7 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
 
     // Create log object
     const newLog = {
-      activityName: activityType,
+      activityName: activityType === 'Other' ? customActivity : activityType,
       startTime,
       endTime,
       startHour,
@@ -472,13 +521,39 @@ function StaffLogScreen({ onNavigate, onAddLog, onLogout, childrenList }: { onNa
           {/* Activity Type */}
           <div className="space-y-2">
             <label className="text-sm" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>Activity Name</label>
-            <input
-              type="text"
+            <select
               value={activityType}
-              onChange={(e) => setActivityType(e.target.value)}
-              placeholder="Enter activity name"
+              onChange={(e) => {
+                setActivityType(e.target.value);
+                if (e.target.value !== 'Other') {
+                  setCustomActivity('');
+                }
+              }}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl"
-            />
+            >
+              <option value="">Select an activity</option>
+              <option value="Story Time">Story Time</option>
+              <option value="Arts & Crafts">Arts & Crafts</option>
+              <option value="Outdoor Play">Outdoor Play</option>
+              <option value="Music & Dance">Music & Dance</option>
+              <option value="Snack Time">Snack Time</option>
+              <option value="Lunch Time">Lunch Time</option>
+              <option value="Nap Time">Nap Time</option>
+              <option value="Circle Time">Circle Time</option>
+              <option value="Free Play">Free Play</option>
+              <option value="Educational Activity">Educational Activity</option>
+              <option value="Physical Education">Physical Education</option>
+              <option value="Other">Other</option>
+            </select>
+            {activityType === 'Other' && (
+              <input
+                type="text"
+                value={customActivity}
+                onChange={(e) => setCustomActivity(e.target.value)}
+                placeholder="Enter custom activity name"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl mt-2"
+              />
+            )}
           </div>
 
           {/* Start Time */}
@@ -2376,18 +2451,30 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
     // Find the child info for this form
     const child = childrenList.find((c: any) => c.childId === form.childId);
     
+    // Map parent IDs to parent names
+    const parentNames: { [key: string]: string } = {
+      'p1': 'Darren Carter',
+      'p2': 'Lindsay Martinez',
+      'p3': 'George James',
+      'p4': 'Sofia Patel',
+      'p5': 'Joanne Parker'
+    };
+    const parentName = child ? (parentNames[child.parentId] || form.parentName || 'Unknown') : (form.parentName || 'Unknown');
+    const childName = child?.name || 'Unknown';
+    
     // Check if we already have a parent entry for this form
     const existingParentEntry = acc[status].find((f: any) => f.id === form.id);
     if (!existingParentEntry) {
       acc[status].push({
         id: form.id,
-        parentName: child?.name || 'Unknown',
+        parentName: childName,
         formCount: 1,
         status: status,
         submittedForms: [{
           id: form.id,
           title: form.title,
-          parentGuardianName: child?.name || 'Unknown',
+          childName: childName,
+          parentGuardianName: parentName,
           contactNumber: child?.contact || 'N/A',
           emergencyContact: 'N/A',
           additionalNotes: '',
@@ -2538,8 +2625,23 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
 }
 
 // Staff Form Detail Screen
-function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms }: { form: any; onNavigate: (screen: StaffScreen) => void; onLogout?: () => void; forms: any[]; setForms?: (forms: any[]) => void }) {
+function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, childrenList }: { form: any; onNavigate: (screen: StaffScreen) => void; onLogout?: () => void; forms: any[]; setForms?: (forms: any[]) => void; childrenList: Child[] }) {
   const [showMenu, setShowMenu] = useState(false);
+
+  // Handle both grouped form entries and raw form objects
+  const rawForm = form.submittedForms?.[0]?.formData || form.formData || form;
+  const childName = form.submittedForms?.[0]?.childName || form.childName || '';
+  
+  // Find the child and get parent name from children data
+  const child = childrenList.find((c: Child) => c.childId === rawForm.childId);
+  const parentNames: { [key: string]: string } = {
+    'p1': 'Darren Carter',
+    'p2': 'Lindsay Martinez',
+    'p3': 'George James',
+    'p4': 'Sofia Patel',
+    'p5': 'Joanne Parker'
+  };
+  const parentName = child ? (parentNames[child.parentId] || form.parentName || 'N/A') : (form.parentName || 'N/A');
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -2576,11 +2678,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms }: 
             </div>
             <div className="col-span-8 bg-[rgba(191,106,2,0.19)] rounded-2xl p-4 text-center">
               <h1 className="text-2xl text-[#bf6a02]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
-                {(
-                  // Support both grouped form entries and raw form objects
-                  (form && (form.title || form.formData?.title || form.submittedForms?.[0]?.title)) ||
-                  'Permission Form'
-                )}
+                {(rawForm?.title || 'Permission Form')} — {childName}
               </h1>
             </div>
             <div className="col-span-2"></div>
@@ -2637,7 +2735,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms }: 
                     Parent/Guardian Name
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                    {form.parentName}
+                    {parentName}
                   </div>
                 </div>
 
@@ -3428,7 +3526,7 @@ export default function StaffApp({ onLogout, childrenList, events, setEvents, fo
       case 'staff-forms':
         return <StaffFormsScreen onNavigate={navigate} onLogout={onLogout} forms={forms} childrenList={childrenList} />;
       case 'staff-form-detail':
-        return <StaffFormDetailScreen form={selectedForm} onNavigate={navigate} onLogout={onLogout} forms={forms} setForms={setForms} />;
+        return <StaffFormDetailScreen form={selectedForm} onNavigate={navigate} onLogout={onLogout} forms={forms} setForms={setForms} childrenList={childrenList} />;
       case 'staff-fees':
         return <StaffFeesScreen onNavigate={navigate} onLogout={onLogout} payments={payments} childrenList={childrenList} />;
       case 'staff-add-fee':
