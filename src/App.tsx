@@ -1569,9 +1569,33 @@ function DailyActivityScreen({ activities, selectedChild, onNavigate, children }
   const childName = child?.name || 'Child';
 
   // Filter activities where the selected child participated
-  const childActivities = (Array.isArray(activities) ? activities : []).filter((a: any) =>
-    Array.isArray(a.children) && a.children.some((c: any) => c.childId === selectedChild && c.selected)
-  );
+  const childActivities = (Array.isArray(activities) ? activities : [])
+    .filter((a: any) =>
+      Array.isArray(a.children) && a.children.some((c: any) => c.childId === selectedChild && c.selected)
+    )
+    .sort((a: any, b: any) => {
+      // Convert time strings to comparable values for sorting (most recent first)
+      const parseTime = (timeStr: string) => {
+        if (!timeStr) return 0;
+        const match = timeStr.match(/(\d+):(\d+)(am|pm)/i);
+        if (!match) return 0;
+        let hours = parseInt(match[1]);
+        const minutes = parseInt(match[2]);
+        const period = match[3].toLowerCase();
+        
+        // Convert to 24-hour format
+        if (period === 'pm' && hours !== 12) hours += 12;
+        if (period === 'am' && hours === 12) hours = 0;
+        
+        return hours * 60 + minutes;
+      };
+      
+      const timeA = parseTime(a.startTime);
+      const timeB = parseTime(b.startTime);
+      
+      // Sort descending (most recent first)
+      return timeB - timeA;
+    });
 
   const getBehavioralNote = (a: any) => {
     const entry = Array.isArray(a.children) ? a.children.find((c: any) => c.childId === selectedChild) : null;
