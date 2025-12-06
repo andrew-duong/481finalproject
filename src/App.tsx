@@ -2020,6 +2020,8 @@ function FormViewScreen({ form, onNavigate, allForms, setAllForms }: { form: any
                 Additional Notes
               </label>
               <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6A02]"
                 rows={4}
                 placeholder="Any additional information..."

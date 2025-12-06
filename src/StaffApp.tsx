@@ -2506,7 +2506,8 @@ function StaffFormsScreen({ onNavigate, onLogout, forms, childrenList }: { onNav
             <div className="mb-4 space-y-2">
               <button 
                 onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+                className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
               >
                 Logout
               </button>
@@ -2641,7 +2642,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
     'p4': 'Sofia Patel',
     'p5': 'Joanne Parker'
   };
-  const parentName = child ? (parentNames[child.parentId] || form.parentName || 'N/A') : (form.parentName || 'N/A');
+  // Use the form's submitted parent name first, fall back to account-based lookup
+  const parentName = rawForm?.parentName || (child ? parentNames[child.parentId] : 'N/A') || 'N/A';
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -2658,7 +2660,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
             <div className="mb-4 space-y-2">
               <button 
                 onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+                className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
               >
                 Logout
               </button>
@@ -2748,7 +2751,7 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
                     Emergency Contact
                   </label>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                    {form.emergencyContact}
+                    {rawForm.emergencyContact || 'N/A'}
                   </div>
                 </div>
 
@@ -2762,8 +2765,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
                   </label>
 
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg min-h-[100px]">
-                    <p className={form.notes ? "text-gray-700" : "text-gray-400"}>
-                      {form.notes || "Any additional information..."}
+                    <p className={(rawForm?.notes || '').trim() ? "text-gray-700" : "text-gray-400"}>
+                      {(rawForm?.notes || '').trim() || "Any additional information..."}
                     </p>
                   </div>
                 </div>
@@ -2780,13 +2783,16 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
                     Parent signature below
                   </p>
 
-                  <div className="border-2 border-gray-300 rounded-lg p-6 bg-white">
-                    <p
-                      className="text-2xl italic text-gray-800"
-                      style={{ fontFamily: "Brush Script MT, cursive" }}
-                    >
-                      {form.signature}
-                    </p>
+                  <div className="border-2 border-gray-300 rounded-lg p-6 bg-white min-h-[120px] flex items-center justify-center">
+                    {rawForm?.signature ? (
+                      <img
+                        src={rawForm.signature}
+                        alt="Parent Signature"
+                        className="max-w-full h-auto"
+                      />
+                    ) : (
+                      <p className="text-gray-400">No signature provided</p>
+                    )}
                   </div>
                 </div>
 
@@ -2875,7 +2881,8 @@ function StaffFeesScreen({ onNavigate, onLogout, payments, childrenList }: { onN
             <div className="mb-4 space-y-2">
               <button 
                 onClick={onLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
+                className="bg-[#155323] hover:bg-[#0f3d1a] text-white py-3 px-6 rounded-xl transition-all shadow-lg w-auto"
+                style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600 }}
               >
                 Logout
               </button>
