@@ -2804,7 +2804,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
                         if (typeof setForms === 'function') {
                           setForms(forms.map((f: any) => f.id === form.id ? { ...f, status: 'completed' } : f));
                         }
-                        alert(`Form "${form.title}" approved.`);
+                        const nameForAlert = rawForm?.title || form.title || "Form";
+                        alert(`Form "${nameForAlert}" approved.`);
                         onNavigate('staff-forms');
                       }}
                       className="bg-[#155323] hover:bg-[#0f3d1a] text-white px-8 py-3 rounded-xl transition-colors"
@@ -2819,7 +2820,8 @@ function StaffFormDetailScreen({ form, onNavigate, onLogout, forms, setForms, ch
                           if (typeof setForms === 'function') {
                             setForms(forms.map((f: any) => f.id === form.id ? { ...f, status: 'outstanding' } : f));
                           }
-                          alert(`Form "${form.title}" rejected.`);
+                          const nameForAlert = rawForm?.title || form.title || "Form";
+                          alert(`Form "${nameForAlert}" rejected.`);
                           onNavigate('staff-forms');
                         }
                       }}
