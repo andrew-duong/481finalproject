@@ -1,7 +1,11 @@
 Mariam Ibrahim - mariam.ibrahim1@ucalgary.ca
+
 Christopher Luk - christopher.luk1@ucalgary.ca
+
 Ezra Chin - ezra.chin@ucalgary.ca
+
 Katrina Chu - katrina.chu@ucalgary.ca
+
 Andrew Duong - andrew.duong@ucalgary.ca
 
   # Sunnyview Daycare
